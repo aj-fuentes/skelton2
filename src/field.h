@@ -23,9 +23,10 @@ public:
         skel(skel), a(a), b(b), c(c), th(th), max_err(1.0e-8), gsl_ws_size(100)
     {}
     double eval(const Point&) const;
-    virtual Vector gradient_eval(const Point&) const = 0;
+    Vector gradient_eval(const Point&) const;
     virtual Point shoot_ray(const Point&,const UnitVector&,double) const = 0;
     virtual double integrand_function(double,const Point&) const = 0;
+    virtual double integrand_derivative_function(double,const Point&,int) const = 0;
     virtual ~Field()
     {}
 
@@ -48,9 +49,9 @@ class SegmentField : public Field
 public:
     SegmentField(const Segment_ptr& skel, const FieldParams a, const FieldParams b, const FieldParams c, const FieldParams th) : Field(skel,a,b,c,th), seg(skel)
     {}
-    Vector gradient_eval(const Point&) const;
     Point shoot_ray(const Point&,const UnitVector&,double) const;
     double integrand_function(double, const Point&) const;
+    double integrand_derivative_function(double,const Point&,int) const;
     ~SegmentField()
     {}
 
