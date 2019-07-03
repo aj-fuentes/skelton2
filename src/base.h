@@ -13,20 +13,19 @@
 #define TOL 1e-10
 
 //Predefinitions
-class Skeleton;
-class Field;
+// class Skeleton;
+// class Field;
 
 //Linear Algebra
 typedef Eigen::Vector3d Point;
 typedef Eigen::Vector3d Vector;
 typedef Eigen::Vector3d UnitVector;
-typedef Eigen::Vector2d Param2d;
 typedef Eigen::Matrix3d Matrix;
 typedef Eigen::Matrix3d Frame;
 
 //Pointers
-typedef std::shared_ptr<Skeleton> Skeleton_ptr;
-typedef std::shared_ptr<Field> Field_ptr;
+// typedef std::shared_ptr<Skeleton> Skeleton_ptr;
+// typedef std::shared_ptr<Field> Field_ptr;
 
 //Arrays
 

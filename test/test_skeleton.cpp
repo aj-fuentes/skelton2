@@ -10,27 +10,54 @@ TEST_CASE("Segment","[skeleton]")
     double l = 5.0;
     UnitVector v = UnitVector(1.0,0.0,0.0);
     UnitVector n = UnitVector(0.0,1.0,0.0);
+    UnitVector b = UnitVector(0.0,0.0,1.0);
 
-    SECTION("Constructor")
+    Skeleton_ptr seg = Segment_ptr(new Segment(p,v,l,n));
+
+    SECTION("Points")
     {
-        Skeleton_ptr seg = std::shared_ptr<Segment>(new Segment(p,v,l,n));
 
         REQUIRE(VEQUAL(seg->get_start_point(),p));
         REQUIRE(VEQUAL(seg->get_end_point(),Point(5.0,0.0,0.0)));
         REQUIRE(VEQUAL(seg->get_point(2.5),Point(2.5,0.0,0.0)));
+    }
+    SECTION("Tangent")
+    {
+        REQUIRE(VEQUAL(seg->get_tangent(0.0),v));
+        REQUIRE(VEQUAL(seg->get_tangent(2.0),v));
+        REQUIRE(VEQUAL(seg->get_tangent(5.0),v));
+    }
+    SECTION("Normal")
+    {
+        REQUIRE(VEQUAL(seg->get_normal(0.0),n));
+        REQUIRE(VEQUAL(seg->get_normal(2.0),n));
+        REQUIRE(VEQUAL(seg->get_normal(5.0),n));
+    }
+    SECTION("Binormal")
+    {
+        REQUIRE(VEQUAL(seg->get_binormal(0.0),b));
+        REQUIRE(VEQUAL(seg->get_binormal(2.0),b));
+        REQUIRE(VEQUAL(seg->get_binormal(5.0),b));
+    }
+    SECTION("Frame")
+    {
+        Frame frm = seg->get_frame(0.0);
+        REQUIRE(VEQUAL(frm.col(0),v));
+        REQUIRE(VEQUAL(frm.col(1),n));
+        REQUIRE(VEQUAL(frm.col(2),b));
 
-        REQUIRE(VEQUAL(seg->get_tangent(0.0),UnitVector(1.0,0.0,0.0)));
-        REQUIRE(VEQUAL(seg->get_tangent(2.0),UnitVector(1.0,0.0,0.0)));
-        REQUIRE(VEQUAL(seg->get_tangent(5.0),UnitVector(1.0,0.0,0.0)));
+        frm = seg->get_frame(l);
+        REQUIRE(VEQUAL(frm.col(0),v));
+        REQUIRE(VEQUAL(frm.col(1),n));
+        REQUIRE(VEQUAL(frm.col(2),b));
 
-        REQUIRE(VEQUAL(seg->get_normal(0.0),UnitVector(0.0,1.0,0.0)));
-        REQUIRE(VEQUAL(seg->get_normal(2.0),UnitVector(0.0,1.0,0.0)));
-        REQUIRE(VEQUAL(seg->get_normal(5.0),UnitVector(0.0,1.0,0.0)));
-
-        REQUIRE(VEQUAL(seg->get_binormal(0.0),UnitVector(0.0,0.0,1.0)));
-        REQUIRE(VEQUAL(seg->get_binormal(2.0),UnitVector(0.0,0.0,1.0)));
-        REQUIRE(VEQUAL(seg->get_binormal(5.0),UnitVector(0.0,0.0,1.0)));
-
+        frm = seg->get_frame(2.5);
+        REQUIRE(VEQUAL(frm.col(0),v));
+        REQUIRE(VEQUAL(frm.col(1),n));
+        REQUIRE(VEQUAL(frm.col(2),b));
+    }
+    SECTION("Distance")
+    {
         REQUIRE(seg->get_distance(Point( 3.3, 0.0, 0.0))==Approx(0.0));
         REQUIRE(seg->get_distance(Point( 0.0, 0.0, 0.0))==Approx(0.0));
         REQUIRE(seg->get_distance(Point( 5.0, 0.0, 0.0))==Approx(0.0));

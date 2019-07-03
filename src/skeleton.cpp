@@ -1,6 +1,6 @@
 #include "skeleton.h"
 
-Segment::Segment(const Point p, const UnitVector v, const double l, const UnitVector n) :
+Segment::Segment(const Point& p, const UnitVector& v, double l, const UnitVector& n) :
     Skeleton(l), p(p), v(v), n(n)
 {
     if (not is_unit(v)) {
@@ -25,19 +25,19 @@ Segment::Segment(const Point p, const UnitVector v, const double l, const UnitVe
     b = v.cross(n);
 }
 
-Point Segment::get_point(const double t) const {
+Point Segment::get_point(double t) const {
     return p+t*v;
 }
-UnitVector Segment::get_tangent(const double) const {
+UnitVector Segment::get_tangent(double) const {
     return v;
 }
-UnitVector Segment::get_normal(const double) const{
+UnitVector Segment::get_normal(double) const{
     return n;
 }
-UnitVector Segment::get_binormal(const double) const{
+UnitVector Segment::get_binormal(double) const{
     return b;
 }
-double Segment::get_distance(const Point x) const {
+double Segment::get_distance(const Point& x) const {
     auto t = (x-p).dot(v);
     if (t<0.0) return (p-x).norm();
     else if (t>l) return (p-x+l*v).norm();

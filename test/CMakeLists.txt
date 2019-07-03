@@ -4,8 +4,8 @@ enable_testing()
 # Make test executable
 set(TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_field.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_skeleton.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_field.cpp
     # ${CMAKE_CURRENT_SOURCE_DIR}/test-ArcLength.cpp
     # ${CMAKE_CURRENT_SOURCE_DIR}/test-AxelVisualization.cpp
     # ${CMAKE_CURRENT_SOURCE_DIR}/test-ConstantMetric.cpp
