@@ -6,11 +6,13 @@ set(${PROJECT_NAME}_HEADERS
     base.h
     field.h
     skeleton.h
+    graph.h
 )
 
 set(${PROJECT_NAME}_SOURCES
     field.cpp
     skeleton.cpp
+    graph.cpp
 )
 
 ## #################################################################
