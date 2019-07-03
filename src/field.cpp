@@ -1,6 +1,9 @@
 #include "field.h"
 
 #include <cmath>
+#include <gsl/gsl_integration.h>
+#include <gsl/gsl_roots.h>
+#include <gsl/gsl_errno.h>
 
 extern "C"
 {
@@ -17,17 +20,56 @@ extern "C"
     }
 }
 
+extern "C" {
+    double omega_poly(double x, void *extra) {
+        double lv = *((double*) extra);
+        double x2=x*x;
+        double x3=x2*x;
+        double x5=x3*x2;
+        double x7=x5*x2;
+        return x - x3 + (3.0/5.0)*x5 - x7/7.0 - (1.0-lv)*16.0/35.0;
+    }
+}
+
 double Field::get_omega_constant(double lv) {
-    // # = 0.5493568319351
-    // p = lambda x: x-(x**3)+3.0/5.0*(x**5)-(x**7)/7.0 - (1-level_set)*16.0/35.0
-    // _pr_brent2 = pr.Brentq(epsilon=1e-10)
-    // _brent2 = lambda g,a,b: _pr_brent(g,a,b).x0
-    // return _brent2(p,0,1)
-    return 1.0;
+    double extra = lv;
+
+    gsl_function F;
+    F.function = &omega_poly;
+    F.params = &extra;
+
+    gsl_root_fsolver *s = gsl_root_fsolver_alloc(gsl_root_fsolver_brent);
+    gsl_root_fsolver_set(s, &F, 0.0, 1.0);
+
+    int status;
+    double root,x_lo,x_hi;
+    int iter = 0, max_iter = 100;
+    do
+    {
+        iter++;
+        status = gsl_root_fsolver_iterate(s);
+        root = gsl_root_fsolver_root(s);
+        x_lo = gsl_root_fsolver_x_lower(s);
+        x_hi = gsl_root_fsolver_x_upper(s);
+        status = gsl_root_test_interval(x_lo, x_hi, 1.0e-8, 0.0);
+        // if (status == GSL_SUCCESS)
+        //     break;
+    }
+    while (status == GSL_CONTINUE && iter < max_iter);
+    gsl_root_fsolver_free (s);
+    return root;
 }
 
 double Field::get_eta_constant(double lv) {
     return sqrt(1.0-pow(lv*0.5,2.0/7.0));
+}
+
+double Field::get_tangential_param(double r, double lv) {
+    return r/get_omega_constant(lv);
+}
+
+double Field::get_normal_param(double r, double lv) {
+    return r/get_eta_constant(lv);
 }
 
 double Field::eval(const Point& x) const
@@ -48,7 +90,7 @@ double Field::eval(const Point& x) const
 
     gsl_integration_workspace_free(ws);
 
-    return val/2.1875e0; //adjust to get value 1.0 at extremities
+    return val*2.1875e0; //adjust to get value 1.0 at extremities
 }
 
 double SegmentField::integrand_function(double t, const Point& x) const
@@ -61,10 +103,12 @@ double SegmentField::integrand_function(double t, const Point& x) const
     double _cos = cos(th);
     double _sin = sin(th);
 
-    double XPN_ = (x-seg->p).dot(seg->n);
-    double XPB_ = (x-seg->p).dot(seg->b);
+    Point XP = (x-seg->p);
 
-    double XPT =  (x-seg->p).dot(seg->v);;
+    double XPN_ = XP.dot(seg->n);
+    double XPB_ = XP.dot(seg->b);
+
+    double XPT =  XP.dot(seg->v);
     double XPN =  XPN_ * _cos + XPB_ * _sin;
     double XPB = -XPN_ * _sin + XPB_ * _cos;
 

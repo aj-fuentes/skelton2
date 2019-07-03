@@ -4,8 +4,6 @@
 #include "base.h"
 #include "skeleton.h"
 
-#include <gsl/gsl_integration.h>
-
 class Field;
 class SegmentField;
 typedef std::shared_ptr<Field> Field_ptr;
@@ -33,6 +31,8 @@ public:
 
     static double get_omega_constant(double);
     static double get_eta_constant(double);
+    static double get_tangential_param(double,double);
+    static double get_normal_param(double,double);
 
     const Skeleton_ptr skel;
     const FieldParams a;
