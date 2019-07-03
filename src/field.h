@@ -34,9 +34,11 @@ public:
     static double get_omega_constant(double);
     static double get_eta_constant(double);
 
-protected:
-    Skeleton_ptr skel;
-    FieldParams a,b,c,th;
+    const Skeleton_ptr skel;
+    const FieldParams a;
+    const FieldParams b;
+    const FieldParams c;
+    const FieldParams th;
     double max_err;
     int gsl_ws_size;
 };
@@ -51,8 +53,8 @@ public:
     double integrand_function(double, const Point&) const;
     ~SegmentField()
     {}
-private:
-    Segment_ptr seg;
+
+    const Segment_ptr seg;
 };
 
 #endif

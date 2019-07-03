@@ -1,7 +1,7 @@
 #include "skeleton.h"
 
 Segment::Segment(const Point& p, const UnitVector& v, double l, const UnitVector& n) :
-    Skeleton(l), p(p), v(v), n(n)
+    Skeleton(l), p(p), v(v), n(n), b(v.cross(n))
 {
     if (not is_unit(v)) {
         std::ostringstream msg;
@@ -22,7 +22,6 @@ Segment::Segment(const Point& p, const UnitVector& v, double l, const UnitVector
         msg << " is not perpendicular to n=" << n.transpose();
         throw new std::logic_error(msg.str());
     }
-    b = v.cross(n);
 }
 
 Point Segment::get_point(double t) const {

@@ -9,7 +9,6 @@ typedef std::shared_ptr<Skeleton> Skeleton_ptr;
 typedef std::shared_ptr<Segment> Segment_ptr;
 
 class Skeleton {
-    friend class Field;
 public:
     Skeleton (double l) : l(l)
     {}
@@ -33,13 +32,12 @@ public:
     }
     virtual ~Skeleton()
     {}
-protected:
-    double l;
+
+    const double l;
 };
 
 class Segment : public Skeleton
 {
-    friend class SegmentField;
 public:
     Segment(const Point&, const UnitVector&, double, const UnitVector&);
     Point get_point(double) const;
@@ -49,9 +47,9 @@ public:
     double get_distance(const Point&) const;
     ~Segment()
     {}
-private:
-    Point p;
-    UnitVector v,n,b;
+
+    const Point p;
+    const UnitVector v,n,b;
 };
 
 #endif
