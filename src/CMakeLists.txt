@@ -7,19 +7,21 @@ set(${PROJECT_NAME}_HEADERS
     field.h
     skeleton.h
     graph.h
+    convex_hull.h
 )
 
 set(${PROJECT_NAME}_SOURCES
     field.cpp
     skeleton.cpp
     graph.cpp
+    convex_hull.cpp
 )
 
 ## #################################################################
 ## Build rules
 ## #################################################################
 
-add_library(${PROJECT_NAME} SHARED
+add_library(${PROJECT_NAME} STATIC
     ${${PROJECT_NAME}_SOURCES}
     ${${PROJECT_NAME}_HEADERS})
 
@@ -27,7 +29,10 @@ add_library(${PROJECT_NAME} SHARED
 ## Link rules
 ## ##################################################################
 
-target_link_libraries(${PROJECT_NAME} ${QHULL_LIBRARIES})
+# SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-fPIC")
+# target_link_libraries(${PROJECT_NAME} ${QHULL_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} qhullcpp)
+target_link_libraries(${PROJECT_NAME} qhull_r)
 target_link_libraries(${PROJECT_NAME} GSL::gsl)
 target_link_libraries(${PROJECT_NAME} GSL::gslcblas)
 

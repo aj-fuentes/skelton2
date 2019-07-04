@@ -18,6 +18,9 @@ struct Edge
     bool operator ==(const Edge& e) const {
         return i==e.i and j==e.j;
     }
+    bool operator <(const Edge& e) const {
+        return i<e.i or (i==e.i and j<e.j);
+    }
 };
 
 class Graph
@@ -25,7 +28,15 @@ class Graph
 public:
     int add_node(const Point&);
     bool add_edge(int,int);
-    Point get_node(int) const;
+    const Point get_node(int) const;
+    std::vector<Point>::const_iterator nodes_begin() const
+    {
+        return nodes.begin();
+    }
+    std::vector<Point>::const_iterator nodes_end() const
+    {
+        return nodes.end();
+    }
     std::vector<Edge>::const_iterator edges_begin() const
     {
         return edges.begin();

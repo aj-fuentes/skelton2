@@ -71,8 +71,18 @@ include_directories(${EIGEN3_INCLUDE_DIRS})
 find_package(GSL REQUIRED)
 include_directories(${GSL_INCLUDE_DIRS})
 
-find_package(Qhull REQUIRED)
-include_directories(${QHULL_INCLUDE_DIRS})
+# find_package(Qhull REQUIRED)
+# include_directories(${QHULL_INCLUDE_DIRS})
+add_library(qhullcpp STATIC IMPORTED)
+set_target_properties(qhullcpp PROPERTIES
+  IMPORTED_LOCATION "/usr/lib64/libqhullcpp.a"
+  INTERFACE_INCLUDE_DIRECTORIES "/usr/include/libqhullcpp"
+)
+add_library(qhull_r SHARED IMPORTED)
+set_target_properties(qhull_r PROPERTIES
+  IMPORTED_LOCATION "/usr/lib64/libqhull_r.so"
+  INTERFACE_INCLUDE_DIRECTORIES "/usr/include/libqhull_r"
+)
 
 # Prepare "Catch" library for other executables
 set(CATCH_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test/catch)
