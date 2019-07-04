@@ -50,7 +50,7 @@ public:
     {
         return adjacent_points[i].end();
     }
-private:
+protected:
     std::vector<Point> nodes;
     std::vector<Edge> edges;
     std::vector<std::vector<Edge>> incident_edges;
