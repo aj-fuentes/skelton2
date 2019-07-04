@@ -2,6 +2,7 @@
 #define GRAPH_H
 
 #include "base.h"
+#include <set>
 
 
 class Graph;
@@ -23,7 +24,7 @@ class Graph
 {
 public:
     int add_node(const Point&);
-    void add_edge(int,int);
+    bool add_edge(int,int);
     Point get_node(int) const;
     std::vector<Edge>::const_iterator edges_begin() const
     {
@@ -37,13 +38,23 @@ public:
     {
         return incident_edges[i].begin();
     }
-    std::vector<Edge>::const_iterator incident_edges_end(int i) const {
+    std::vector<Edge>::const_iterator incident_edges_end(int i) const
+    {
         return incident_edges[i].end();
+    }
+    std::set<int>::const_iterator adjacent_points_begin(int i) const
+    {
+        return adjacent_points[i].begin();
+    }
+    std::set<int>::const_iterator adjacent_points_end(int i) const
+    {
+        return adjacent_points[i].end();
     }
 private:
     std::vector<Point> nodes;
     std::vector<Edge> edges;
     std::vector<std::vector<Edge>> incident_edges;
+    std::vector<std::set<int>> adjacent_points;
 };
 
 #endif
