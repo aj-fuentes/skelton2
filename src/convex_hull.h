@@ -23,7 +23,7 @@ public:
         return faces.end();
     }
 private:
-    void process_qhull_results();
+    void compute_planar();
 
     std::vector<double> point_coords;
     std::vector<Face> faces;

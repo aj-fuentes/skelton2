@@ -31,12 +31,19 @@ typedef Eigen::Matrix3d Frame;
 
 
 //Utilities
-inline bool is_perp(const Vector& a, const Vector& b) {
+inline bool is_perp(const Vector& a, const Vector& b)
+{
     return abs(a.dot(b))<TOL;
 }
 
-inline bool is_unit(const Vector& a) {
+inline bool is_unit(const Vector& a)
+{
     return abs(a.norm()-1.0)<TOL;
+}
+
+inline Point project_to_plane(const Point& q, const UnitVector& n, const Point& p)
+{
+    return q-(q-p).dot(n)*n;
 }
 
 #endif
