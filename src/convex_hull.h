@@ -9,9 +9,9 @@ typedef std::shared_ptr<ConvexHull> ConvexHull_ptr;
 
 struct EdgeDual
 {
-    const UnitVector u;
-    const UnitVector v;
-    const double phi;
+    UnitVector u;
+    UnitVector v;
+    double phi;
     EdgeDual(UnitVector u, UnitVector v, double phi) :
         u(u), v(v), phi(phi)
     {}
@@ -39,6 +39,7 @@ public:
     }
 private:
     void compute_planar();
+    void sort_incident_edges();
 
     std::vector<double> point_coords; //used only for the qhull call
     //it's a list of all the coordinates of the nodes x0,y0,z0,x1,y1,z1...xn,yn,zn
@@ -48,7 +49,7 @@ private:
 
     std::vector<Face> faces;
     std::vector<UnitVector> normals; //of the faces
-    std::map<const Edge,std::vector<int>> edge_faces; //two per edge
+    std::map<Edge,std::vector<int>> edge_faces; //two per edge
 
     std::vector<std::set<int>> node_faces; //faces incident to a node
 };

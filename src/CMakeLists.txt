@@ -8,6 +8,7 @@ set(${PROJECT_NAME}_HEADERS
     skeleton.h
     graph.h
     convex_hull.h
+    scaffolder.h
 )
 
 set(${PROJECT_NAME}_SOURCES
@@ -15,6 +16,7 @@ set(${PROJECT_NAME}_SOURCES
     skeleton.cpp
     graph.cpp
     convex_hull.cpp
+    scaffolder.cpp
 )
 
 ## #################################################################

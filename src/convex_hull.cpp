@@ -111,6 +111,8 @@ void ConvexHull::compute_planar() {
         faces.push_back(face1);
         normals.push_back(-n);
     }
+
+    sort_incident_edges();
 }
 
 void ConvexHull::compute()
@@ -181,6 +183,7 @@ void ConvexHull::compute()
             assert(edge_faces[e][0]==new_face_id or edge_faces[e][1]==new_face_id);
         }
     }
+
     #ifdef DEBUG_CONVEX_HULL
         for(auto kv : edge_faces)
         {
@@ -189,6 +192,24 @@ void ConvexHull::compute()
             assert(kv.second.size()==2);
         }
     #endif
+
+    sort_incident_edges();
+}
+
+void ConvexHull::sort_incident_edges() {
+    if(planar) return;
+    for(int i=0;i<nodes.size();i++)
+    {
+        UnitVector n = nodes[i]; //the nodes here are normalized
+        UnitVector u = nodes[*adjacent_nodes[i].begin()].normalized();
+        UnitVector v = n.cross(u).normalized();
+
+        sort(incident_edges[i].begin(),incident_edges[i].end(),[&,this](const Edge& e0, const Edge& e1){
+            Vector w0 = nodes[e0.i==i? e0.j : e0.i]-n; //edge vectors
+            Vector w1 = nodes[e1.i==i? e1.j : e1.i]-n;
+            return std::atan2(w0.dot(v),w0.dot(u))<std::atan2(w1.dot(v),w1.dot(u));
+        });
+    }
 }
 
 EdgeDual ConvexHull::edge_dual(const Edge e) const

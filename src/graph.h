@@ -11,7 +11,7 @@ typedef std::shared_ptr<Graph> Graph_ptr;
 
 struct Edge
 {
-    const int i,j;
+    int i,j;
     Edge(int i, int j) :
         i(i<j? i : j), j(i<j? j : i)
     {}
@@ -31,7 +31,11 @@ class Graph
 public:
     int add_node(const Point&);
     bool add_edge(int,int);
-    const Point get_node(int) const;
+    const Point& get_node(int) const;
+    int node_count() const
+    {
+        return nodes.size();
+    }
     bool is_dangling(int i) const
     {
         return incident_edges[i].size()==1;
@@ -67,19 +71,19 @@ public:
     {
         return incident_edges[i].end();
     }
-    std::set<int>::const_iterator adjacent_points_begin(int i) const
+    std::set<int>::const_iterator adjacent_nodes_begin(int i) const
     {
-        return adjacent_points[i].begin();
+        return adjacent_nodes[i].begin();
     }
-    std::set<int>::const_iterator adjacent_points_end(int i) const
+    std::set<int>::const_iterator adjacent_nodes_end(int i) const
     {
-        return adjacent_points[i].end();
+        return adjacent_nodes[i].end();
     }
 protected:
     std::vector<Point> nodes;
     std::vector<Edge> edges;
     std::vector<std::vector<Edge>> incident_edges;
-    std::vector<std::set<int>> adjacent_points;
+    std::vector<std::set<int>> adjacent_nodes;
 };
 
 #endif
