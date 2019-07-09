@@ -3,6 +3,7 @@
 
 #include "base.h"
 #include <set>
+#include <iostream>
 
 
 class Graph;
@@ -10,17 +11,19 @@ typedef std::shared_ptr<Graph> Graph_ptr;
 
 struct Edge
 {
-    int i,j;
-    Edge(int i, int j) : i(i),j(j)
+    const int i,j;
+    Edge(int i, int j) :
+        i(i<j? i : j), j(i<j? j : i)
+    {}
+    bool operator ==(const Edge& e) const
     {
-        if(j<i) std::swap(this->i,this->j);
-    }
-    bool operator ==(const Edge& e) const {
         return i==e.i and j==e.j;
     }
-    bool operator <(const Edge& e) const {
+    bool operator <(const Edge& e) const
+    {
         return i<e.i or (i==e.i and j<e.j);
     }
+    friend std::ostream& operator <<(std::ostream&,const Edge&);
 };
 
 class Graph

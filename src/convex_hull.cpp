@@ -17,19 +17,20 @@
 
 // #define DEBUG_CONVEX_HULL
 
-ConvexHull::ConvexHull(std::vector<Point> points, bool compute_now)
+ConvexHull::ConvexHull(std::vector<Point> points, bool compute_now) : planar(false)
 {
     for(auto p : points)
     {
+        assert(p.norm()>TOL);
+        p.normalize();
         add_node(p);
         point_coords.push_back(p(0));
         point_coords.push_back(p(1));
         point_coords.push_back(p(2));
     }
+    barycenter = std::accumulate(nodes.begin(),nodes.end(),Point(0,0,0))/nodes.size();
     if(compute_now)
-    {
         compute();
-    }
 }
 
 int ConvexHull::add_node(const Point& p)
@@ -49,35 +50,73 @@ bool ConvexHull::add_edge(int i, int j)
 }
 
 void ConvexHull::compute_planar() {
-    const Point c = std::accumulate(nodes.begin(),nodes.end(),Point(0,0,0))/nodes.size();
-    const UnitVector u = (nodes[0]-c).normalized();
-    const UnitVector n = u.cross(nodes[1]-c).normalized();
-    const UnitVector v = n.cross(u).normalized();
 
-    std::vector<std::pair<double,int>> angles_idx;
-    for(int i=0; i<nodes.size();++i)
+    planar = true;
+
+    if(nodes.size()<3)
     {
-        auto p = nodes[i];
-        angles_idx.push_back({std::atan2(v.dot(p-c),u.dot(p-c)),i});
-    }
-    std::sort(angles_idx.begin(),angles_idx.end());
-
-    Face face0(nodes.size()),face1(nodes.size());
-    for(int i=0; i<nodes.size(); ++i) {
-        face0[i] = angles_idx[i].second;
-        face1[nodes.size()-i-1] = angles_idx[i].second;
-        auto j = (i+1)%nodes.size();
-        Edge e(i,j);
+        Edge e = nodes.size()==2? Edge(0,1) : Edge(0,0);
+        UnitVector n;
+        if (nodes.size()==2)
+        {
+            //some adaptations for articulations
+            n = nodes[0].cross(nodes[1]).normalized();
+            faces.push_back({0,1});
+            faces.push_back({0,1});
+        }
+        else
+        {
+            //this is a hack for dangling nodes
+            n = Vector(1,0,0).cross(nodes[0]);
+            if(n.norm()<TOL)
+                n = Vector(0,1,0).cross(nodes[0]);
+            n.normalize();
+            faces.push_back({0,0});
+            faces.push_back({0,0});
+        }
         add_edge(e.i,e.j);
-        edge_faces[e].push_back(0);
-        edge_faces[e].push_back(1);
+        normals.push_back(n);
+        normals.push_back(-n);
+        edge_faces[e] = {0,1};
     }
-    normals.push_back(n);
-    normals.push_back(-n);
+    else
+    {
+        const UnitVector u = nodes[0];
+        const UnitVector n = u.cross(nodes[1]).normalized();
+        const UnitVector v = n.cross(u).normalized();
+
+        std::vector<std::pair<double,int>> angles_idx;
+        for(int i=0; i<nodes.size();++i)
+        {
+            auto p = nodes[i];
+            angles_idx.push_back({std::atan2(p.dot(v),p.dot(u)),i});
+        }
+        std::sort(angles_idx.begin(),angles_idx.end());
+
+        Face face0(nodes.size());
+        Face face1(nodes.size());
+        for(int i=0; i<nodes.size(); ++i) {
+            face0[i] = angles_idx[i].second;
+            face1[nodes.size()-i-1] = angles_idx[i].second;
+            auto j = (i+1)%nodes.size();
+            Edge e(i,j);
+            add_edge(e.i,e.j);
+            edge_faces[e].push_back(0);
+            edge_faces[e].push_back(1);
+        }
+
+        faces.push_back(face0);
+        normals.push_back(n);
+
+        faces.push_back(face1);
+        normals.push_back(-n);
+    }
 }
 
 void ConvexHull::compute()
 {
+    assert(nodes.size()>0);
+
     orgQhull::Qhull qhull;
     const double *pointCoordinates = &point_coords[0];
     const int pointCount = nodes.size();
@@ -103,13 +142,6 @@ void ConvexHull::compute()
             std::cout << "Face id=" << new_face_id << std::endl;
         #endif
 
-        //setup the normal of this face
-        normals.emplace_back(facet.hyperplane().coordinates());
-
-        #ifdef DEBUG_CONVEX_HULL
-            std::cout << "\tNormal=" << normals[new_face_id].transpose() << std::endl;
-        #endif
-
         for(auto vertex : facet.vertices())
         {
             #ifdef DEBUG_CONVEX_HULL
@@ -121,6 +153,19 @@ void ConvexHull::compute()
             new_face.push_back(point_id);
             node_faces[point_id].insert(new_face_id);
         }
+
+        //setup the normal of this face
+        const UnitVector normal(facet.hyperplane().coordinates());
+        const Point first_vertex(nodes[new_face[0]]);
+        const Vector outward_vector(first_vertex-barycenter);
+        if(normal.dot(outward_vector)<0) //in this case the normal is inverted
+            normals.push_back(-normal);
+        else
+            normals.push_back(normal);
+
+        #ifdef DEBUG_CONVEX_HULL
+            std::cout << "\tNormal=" << normals[new_face_id].transpose() << std::endl;
+        #endif
 
         //build edges of this face, and add info to edge_faces
         for (int k=0;k<new_face.size();k++)
@@ -137,7 +182,7 @@ void ConvexHull::compute()
         }
     }
     #ifdef DEBUG_CONVEX_HULL
-        for( auto kv : edge_faces)
+        for(auto kv : edge_faces)
         {
             std::cout << "Edge (" << kv.first.i <<"," << kv.first.j << ") faces= ";
             std::cout << kv.second[0] << "," << kv.second[1] << std::endl;
@@ -146,3 +191,15 @@ void ConvexHull::compute()
     #endif
 }
 
+EdgeDual ConvexHull::edge_dual(const Edge e) const
+{
+    const int i = edge_faces.at(e)[0];
+    const int j = edge_faces.at(e)[1];
+    const UnitVector u = normals[i];
+    const UnitVector w = normals[j];
+    const UnitVector v = planar?
+        (nodes[e.j]-nodes[e.i]).cross(u).normalized() :
+        (           u.cross(w)).cross(u).normalized();
+    const double phi = std::atan2(w.dot(v),w.dot(u));
+    return EdgeDual(u,v,phi);
+}

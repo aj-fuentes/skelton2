@@ -1,6 +1,7 @@
 #include "catch.hpp"
 
 #include "convex_hull.h"
+#include <set>
 
 #define VEQUAL(a,b) (((a)-(b)).norm())==Approx(0.0)
 
@@ -11,6 +12,7 @@ TEST_CASE("ConvexHull","[convex_hull]")
     {
         std::vector<Point> points{Point(0,0,0),Point(1,0,0),Point(0,1,0),Point(0,0,1),Point(1,1,1)};
         ConvexHull chull(points);
+
         REQUIRE(VEQUAL(chull.get_node(0),points[0]));
         REQUIRE(VEQUAL(chull.get_node(1),points[1]));
         REQUIRE(VEQUAL(chull.get_node(2),points[2]));
@@ -19,40 +21,75 @@ TEST_CASE("ConvexHull","[convex_hull]")
 
     SECTION("Convex hull of a tetrahedron")
     {
-        ConvexHull chull({{0,0,0},{1,0,0},{0,1,0},{0,0,1}});
+        ConvexHull chull({{-1,-1,0},{1,0,0},{0,1,0},{0,0,1}});
         chull.compute();
+
+        REQUIRE(chull.is_planar()==false);
     }
 
-    SECTION("Convex hull of 5 vertices of a cube")
+    SECTION("Convex hull of 5 vertices")
     {
-        ConvexHull chull({{0,0,0},{1,0,0},{0,1,0},{0,0,1},{1,1,1}});
+        ConvexHull chull({{-1,-1,0},{1,0,0},{0,1,0},{0,0,1},{1,1,1}});
         chull.compute();
+
+        REQUIRE(chull.is_planar()==false);
     }
 
     SECTION("Convex hull of a cube")
     {
         ConvexHull chull({
-            {0,0,0},{1,0,0},{0,1,0},{0,0,1},{1,1,0},
-            {0,0,1},{1,0,1},{0,1,1},{0,0,1},{1,1,1}
+            {-1,-1,-1},{1,-1,-1},{-1,1,-1},{-1,-1,1},{1,1,-1},
+            {-1,-1,1},{1,-1,1},{-1,1,1},{-1,-1,1},{1,1,1}
         });
         chull.compute();
-    }
 
-    SECTION("Convex hull of a cube with a point inside")
-    {
-        ConvexHull chull({
-            Point(0,0,0),Point(1,0,0),Point(0,1,0),Point(0,0,1),Point(1,1,0),
-            Point(0.5,0.5,0.5),
-            Point(0,0,1),Point(1,0,1),Point(0,1,1),Point(0,0,1),Point(1,1,1),
-        });
-        chull.compute();
+        REQUIRE(chull.is_planar()==false);
     }
-
+}
+TEST_CASE("ConvexHull planar","[convex_hull]")
+{
     SECTION("Convex hull of a triangle")
     {
-        ConvexHull chull({
-            Point(0,0,0),Point(1,0,0),Point(0,1,0)
-        });
+        std::vector<Point> points = {Point(1,0,0),Point(0,1,0),Point(-1,-1,0).normalized()};
+        ConvexHull chull(points);
         chull.compute();
+
+        REQUIRE(chull.is_planar());
+
+        REQUIRE(chull.incident_edges_end(0)-chull.incident_edges_begin(0)==2);
+        auto edges = std::set<Edge>(chull.incident_edges_begin(0),chull.incident_edges_end(0));
+        REQUIRE(edges==std::set<Edge>{Edge(0,1),Edge(0,2)});
+
+        REQUIRE(chull.incident_edges_end(1)-chull.incident_edges_begin(1)==2);
+        edges = std::set<Edge>(chull.incident_edges_begin(1),chull.incident_edges_end(1));
+        REQUIRE(edges==std::set<Edge>{Edge(0,1),Edge(1,2)});
+
+        REQUIRE(chull.incident_edges_end(2)-chull.incident_edges_begin(2)==2);
+        edges = std::set<Edge>(chull.incident_edges_begin(2),chull.incident_edges_end(2));
+        REQUIRE(edges==std::set<Edge>{Edge(0,2),Edge(1,2)});
+
+        REQUIRE(chull.edge_dual(Edge(0,1)).u==UnitVector(0,0,1));
+        REQUIRE(chull.edge_dual(Edge(0,2)).u==UnitVector(0,0,1));
+        REQUIRE(chull.edge_dual(Edge(1,2)).u==UnitVector(0,0,1));
+
+        REQUIRE(chull.edge_dual(Edge(0,1)).v.dot(points[0]-points[1])==Approx(0).margin(TOL));
+        REQUIRE(chull.edge_dual(Edge(1,2)).v.dot(points[1]-points[2])==Approx(0).margin(TOL));
+        REQUIRE(chull.edge_dual(Edge(0,2)).v.dot(points[0]-points[2])==Approx(0).margin(TOL));
     }
+}
+
+TEST_CASE("ConvexHull 2 nodes","[convex_hull]")
+{
+    std::vector<Point> points = {Point(1,0,0),Point(0,1,0)};
+    ConvexHull chull(points);
+    chull.compute();
+
+    REQUIRE(chull.is_planar());
+
+    REQUIRE(chull.incident_edges_end(0)-chull.incident_edges_begin(0)==1);
+    auto edges = std::set<Edge>(chull.incident_edges_begin(0),chull.incident_edges_end(0));
+    REQUIRE(edges==std::set<Edge>{Edge(0,1)});
+
+    REQUIRE(chull.edge_dual(Edge(0,1)).u.dot(points[0]-points[1])==Approx(0).margin(TOL));
+    REQUIRE(chull.edge_dual(Edge(0,1)).v.dot(points[0]-points[1])==Approx(0).margin(TOL));
 }

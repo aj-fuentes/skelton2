@@ -1,5 +1,10 @@
 #include "graph.h"
 
+std::ostream& operator <<(std::ostream& os,const Edge& e)
+{
+    return os << "edge(" << e.i << "," << e.j << ")";
+}
+
 int Graph::add_node(const Point& p)
 {
     //TODO: check duplicates
