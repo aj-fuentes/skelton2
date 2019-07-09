@@ -29,6 +29,17 @@ public:
     int add_node(const Point&);
     bool add_edge(int,int);
     const Point get_node(int) const;
+    bool is_dangling(int i) const
+    {
+        return incident_edges[i].size()==1;
+    }
+    bool is_articulation(int i) const
+    {
+        return incident_edges[i].size()==2;
+    }
+    bool is_joint(int i) const {
+        return incident_edges[i].size()>2;
+    }
     std::vector<Point>::const_iterator nodes_begin() const
     {
         return nodes.begin();
