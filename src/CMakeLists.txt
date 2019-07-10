@@ -33,10 +33,12 @@ add_library(${PROJECT_NAME} STATIC
 
 # SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-fPIC")
 # target_link_libraries(${PROJECT_NAME} ${QHULL_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} eigen3)
 target_link_libraries(${PROJECT_NAME} qhullcpp)
 target_link_libraries(${PROJECT_NAME} qhull_r)
-target_link_libraries(${PROJECT_NAME} GSL::gsl)
-target_link_libraries(${PROJECT_NAME} GSL::gslcblas)
+target_link_libraries(${PROJECT_NAME} gsl)
+target_link_libraries(${PROJECT_NAME} gslcblas)
+target_link_libraries(${PROJECT_NAME} glpk)
 
 
 

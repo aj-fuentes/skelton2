@@ -30,7 +30,10 @@ class Graph
 public:
     int add_node(const Point&);
     bool add_edge(int,int);
-    const Point& get_node(int) const;
+    const Point& get_node(int i) const
+    {
+        return nodes[i];
+    }
     int node_count() const
     {
         return nodes.size();

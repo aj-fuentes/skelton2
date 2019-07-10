@@ -14,22 +14,24 @@ int Graph::add_node(const Point& p)
     return nodes.size()-1;
 }
 
-const Point& Graph::get_node(int i) const {
-    return nodes[i];
-}
-
 bool Graph::add_edge(int i, int j)
 {
+    Edge e(i,j);
+
     //check if edge already present
     if(adjacent_nodes[i].find(j)!=adjacent_nodes[i].end())
         return false;
 
-    Edge e(i,j);
     edges.push_back(e);
+
     incident_edges[i].push_back(e);
-    incident_edges[j].push_back(e);
     adjacent_nodes[i].insert(j);
-    adjacent_nodes[j].insert(i);
+
+    if(i!=j) //self loops possible only for dangling nodes
+    {
+        incident_edges[j].push_back(e);
+        adjacent_nodes[j].insert(i);
+    }
 
     return true;
 }

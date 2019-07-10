@@ -46,6 +46,7 @@ TEST_CASE("ConvexHull","[convex_hull]")
         REQUIRE(chull.is_planar()==false);
     }
 }
+
 TEST_CASE("ConvexHull planar","[convex_hull]")
 {
     SECTION("Convex hull of a triangle")
@@ -100,7 +101,6 @@ TEST_CASE("ConvexHull 2 nodes","[convex_hull]")
     REQUIRE(edual.u.dot(w)==Approx(0).margin(TOL));
     REQUIRE(edual.v.dot(w)==Approx(0).margin(TOL));
     REQUIRE(edual.phi==Approx(2*PI_));
-
 }
 
 TEST_CASE("ConvexHull 1 node","[convex_hull]")
@@ -118,5 +118,4 @@ TEST_CASE("ConvexHull 1 node","[convex_hull]")
     REQUIRE(edual.u.dot(points[0])==Approx(0).margin(TOL));
     REQUIRE(edual.v.dot(points[0])==Approx(0).margin(TOL));
     REQUIRE(edual.phi==Approx(2*PI_));
-
 }

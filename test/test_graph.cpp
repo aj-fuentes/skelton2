@@ -41,3 +41,20 @@ TEST_CASE("Graph","[graph]")
         REQUIRE(g.is_dangling(3));
     }
 }
+
+TEST_CASE("Graph test extreme situations","[graph]")
+{
+    Graph g;
+
+    REQUIRE(g.add_node(Point(0.0,0.0,0.0))==0);
+    REQUIRE(g.add_node(Point(1.0,0.0,0.0))==1);
+
+    g.add_edge(0,0);
+    g.add_edge(1,1);
+
+    REQUIRE(g.is_dangling(0));
+    REQUIRE(g.is_dangling(1));
+
+    REQUIRE(g.get_incident_edges(0)==std::vector<Edge>{Edge(0,0)});
+    REQUIRE(g.get_incident_edges(1)==std::vector<Edge>{Edge(1,1)});
+}

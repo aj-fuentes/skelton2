@@ -65,23 +65,42 @@ endif(WIN32)
 ## Dependencies - external
 ## #################################################################
 
-find_package(Eigen3 REQUIRED)
-include_directories(${EIGEN3_INCLUDE_DIRS})
+# find_package(Eigen3 REQUIRED)
+add_library(eigen3 INTERFACE IMPORTED)
+set_target_properties(eigen3 PROPERTIES
+  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/external/include/Eigen"
+)
+# include_directories()
 
-find_package(GSL REQUIRED)
-include_directories(${GSL_INCLUDE_DIRS})
+# find_package(GSL REQUIRED)
+# include_directories(${GSL_INCLUDE_DIRS})
 
-# find_package(Qhull REQUIRED)
-# include_directories(${QHULL_INCLUDE_DIRS})
+add_library(gsl STATIC IMPORTED)
+set_target_properties(gsl PROPERTIES
+  IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/external/lib/libgsl.a"
+  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/external/include/gsl"
+)
+add_library(gslcblas STATIC IMPORTED)
+set_target_properties(gslcblas PROPERTIES
+  IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/external/lib/libgslcblas.a"
+  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/external/include/gsl"
+)
+
 add_library(qhullcpp STATIC IMPORTED)
 set_target_properties(qhullcpp PROPERTIES
-  IMPORTED_LOCATION "/usr/lib64/libqhullcpp.a"
-  INTERFACE_INCLUDE_DIRECTORIES "/usr/include/libqhullcpp"
+  IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/external/lib/libqhullcpp.a"
+  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/external/include/libqhullcpp"
 )
-add_library(qhull_r SHARED IMPORTED)
+add_library(qhull_r STATIC IMPORTED)
 set_target_properties(qhull_r PROPERTIES
-  IMPORTED_LOCATION "/usr/lib64/libqhull_r.so"
-  INTERFACE_INCLUDE_DIRECTORIES "/usr/include/libqhull_r"
+  IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/external/lib/libqhullstatic_r.a"
+  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/external/include/libqhull_r"
+)
+
+add_library(glpk STATIC IMPORTED)
+set_target_properties(glpk PROPERTIES
+  IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/external/lib/libglpk.a"
+  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/external/include"
 )
 
 # Prepare "Catch" library for other executables
@@ -89,29 +108,16 @@ set(CATCH_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test/catch)
 add_library(Catch INTERFACE)
 target_include_directories(Catch INTERFACE ${CATCH_INCLUDE_DIR})
 
-
 ## #################################################################
 ## Dependencies - internal
 ## #################################################################
 
 include_directories(${CMAKE_BINARY_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/src)
-# include_directories(${CMAKE_SOURCE_DIR}/src/cli)
-# include_directories(${CMAKE_SOURCE_DIR}/src/field)
-# include_directories(${CMAKE_SOURCE_DIR}/src/graph)
-# include_directories(${CMAKE_SOURCE_DIR}/src/kernel)
-# include_directories(${CMAKE_SOURCE_DIR}/src/math)
-# include_directories(${CMAKE_SOURCE_DIR}/src/mesh)
-# include_directories(${CMAKE_SOURCE_DIR}/src/metric)
-# include_directories(${CMAKE_SOURCE_DIR}/src/reader)
-# include_directories(${CMAKE_SOURCE_DIR}/src/skeleton)
-# include_directories(${CMAKE_SOURCE_DIR}/src/visualization)
-
 
 ## #################################################################
 ## Input
 ## #################################################################
 
 add_subdirectory (src)
-# add_subdirectory (app)
 add_subdirectory (test)

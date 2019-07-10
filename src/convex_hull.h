@@ -14,7 +14,9 @@ struct EdgeDual
     double phi;
     EdgeDual(UnitVector u, UnitVector v, double phi) :
         u(u), v(v), phi(phi)
-    {}
+    {
+        assert(phi>0);
+    }
 };
 
 typedef std::vector<int> Face;
