@@ -31,6 +31,7 @@ TEST_CASE("Scaffolder triangle")
         s.set_mip_lp_file("triangle_scaff.mod");
         s.set_mip_sol_file("triangle_scaff.sol");
         s.compute();
+        s.save_to_file("triangle_scaff.obj");
     }
 
     SECTION("Standard scaffold max angle pi/3")

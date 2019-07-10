@@ -61,6 +61,7 @@ private:
     void setup_mip(std::ostream&);
     void solve_mip();
     void read_mip_solution();
+    void compute_cells_match();
     void compute_cells();
 
     int cell_sum_value(int i,const GraphEdge& e)
@@ -80,6 +81,7 @@ private:
     std::vector<ConvexHull> chulls;
     std::map<std::string,int> var_values;
     std::map<std::pair<int,GraphEdge>,std::vector<Point>> cells;
+    std::map<GraphEdge,std::vector<std::pair<int,int>>> cells_match;
 
     double max_arc_angle;
     int min_cell_quads;

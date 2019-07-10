@@ -17,6 +17,10 @@ struct EdgeDual
     {
         assert(phi>0);
     }
+    Point get_point(double t) const
+    {
+        return u*cos(t) + v*sin(t);
+    }
 };
 
 typedef std::vector<int> Face;

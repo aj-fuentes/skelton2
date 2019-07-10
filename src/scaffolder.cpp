@@ -192,7 +192,85 @@ void Scaffolder::solve_mip()
 
 void Scaffolder::read_mip_solution()
 {
+    std::ifstream fin(mip_sol_file);
+    std::string var;
+    int val;
+    while (fin >> var >> val)
+    {
+        var_values[var] = val;
+    }
+}
 
+void Scaffolder::compute_cells()
+{
+    for(int i=0;i<chulls.size();i++) //i is the node in the skeleton graph
+    {
+        for(int j=0;j<chulls[i].get_nodes().size();j++) //j is the node in the convex hull
+        {
+            //j coincides with the j-th incident edge to the i-th node in the skeleton graph
+            auto g_e = g->get_incident_edges(i)[j];
+
+            std::pair<int,GraphEdge> key{i,g_e};
+            cells[key] = std::vector<Point>();
+            auto& points = cells[key];
+
+            //compute cell points
+            for(auto ch_e : chulls[i].get_incident_edges(j))
+            {
+                const int arc_subdiv = var_values[arc_variable(i,ch_e)];
+                const EdgeDual e_dual = chulls[i].edge_dual(ch_e);
+                if(points.empty())
+                    points.push_back(e_dual.u);
+                if((points[points.size()-1]-e_dual.u).norm()<TOL)
+                    for(int k=1;k<=arc_subdiv;k++)
+                        points.push_back(e_dual.get_point((k*e_dual.phi)/arc_subdiv));
+                else
+                {
+                    assert((points[points.size()-1]-e_dual.get_point(e_dual.phi)).norm()<TOL);
+                    for(int k=arc_subdiv-1;k>=0;k--)
+                        points.push_back(e_dual.get_point((k*e_dual.phi)/arc_subdiv));
+                }
+            }
+            points.pop_back(); //last point coincides with first one
+
+            //sort cell points
+            auto n = (g->get_node(g_e.j)-g->get_node(g_e.i)).normalized();
+            if(i==g_e.j)
+                n = -n;
+            if(points[0].cross(points[1]).dot(n)<0)
+                std::reverse(points.begin(),points.end());
+        }
+    }
+}
+
+void Scaffolder::compute_cells_match()
+{
+    for(auto e : g->get_edges())
+    {
+        auto& points1 = cells.at({e.i,e});
+        auto& points2 = cells.at({e.j,e});
+        int i = 0;
+        double best_dist = 0.0;
+        int n = points1.size();
+        for(int j=0;j<n;j++)
+            best_dist += (points1[j]-points2[n-1-j]).norm();
+        double dist = 0.0;
+        for(int k=1;k<n;k++)
+        {
+            dist = 0.0;
+            for(int j=0;j<n;j++)
+                dist += (points1[(j+k)%n]-points2[n-1-j]).norm();
+            if(dist<best_dist)
+            {
+                best_dist = dist;
+                i = k;
+            }
+        }
+        std::vector<std::pair<int,int>> res;
+        for(int j=0;j<n;j++)
+            res.push_back({(j+i)%n,n-1-j});
+        cells_match[e] = res;
+    }
 }
 
 void Scaffolder::compute()
@@ -203,10 +281,58 @@ void Scaffolder::compute()
     setup_mip(mip_lp);
 
     //save model to file
-    std::ofstream f(mip_lp_file);
-    f << mip_lp.str();
-    f.close();
+    std::ofstream fout(mip_lp_file);
+    fout << mip_lp.str();
+    fout.close();
 
     solve_mip();
     read_mip_solution();
+
+    compute_cells();
+    compute_cells_match();
+}
+
+void Scaffolder::save_to_file(const std::string& fname) const
+{
+
+    std::vector<Point> points;
+    std::vector<std::tuple<int,int,int,int>> quads;
+
+    for(auto e : g->get_edges())
+    {
+        auto& match = cells_match.at(e);
+        auto& cell1 = cells.at({e.i,e});
+        auto& cell2 = cells.at({e.j,e});
+        auto& base1 = g->get_node(e.i);
+        auto& base2 = g->get_node(e.j);
+        for(int i=0;i<match.size();i++)
+        {
+            auto& p1 = match[i];
+            auto& p2 = match[(i+1)%match.size()];
+            points.push_back(base1+cell1[p1.first]);
+            points.push_back(base2+cell2[p1.second]);
+            points.push_back(base2+cell2[p2.second]);
+            points.push_back(base1+cell1[p2.first]);
+            int k = points.size()-1;
+            quads.push_back({k-3,k-2,k-1,k});
+        }
+    }
+
+    std::ofstream fout(fname);
+    for(auto& p : points)
+    {
+        fout << "v ";
+        fout << p(0) << " ";
+        fout << p(1) << " ";
+        fout << p(2) << std::endl;
+    }
+    for(auto& q : quads)
+    {
+        fout << "f ";
+        fout << std::get<0>(q) + 1 << " ";
+        fout << std::get<1>(q) + 1 << " ";
+        fout << std::get<2>(q) + 1 <<  " ";
+        fout << std::get<3>(q) + 1 << std::endl;
+    }
+    fout.close();
 }
