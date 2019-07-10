@@ -11,6 +11,7 @@
 
 //Constants
 #define TOL 1e-10
+#define PI_ 3.14159265358979323846
 
 //Predefinitions
 // class Skeleton;

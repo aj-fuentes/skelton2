@@ -3,8 +3,7 @@
 
 #include "base.h"
 #include <set>
-#include <iostream>
-
+#include <ostream>
 
 class Graph;
 typedef std::shared_ptr<Graph> Graph_ptr;
@@ -47,6 +46,21 @@ public:
     bool is_joint(int i) const {
         return incident_edges[i].size()>2;
     }
+
+    const std::vector<Point>& get_nodes() const
+    {
+        return nodes;
+    }
+    const std::vector<Edge>& get_edges() const
+    {
+        return edges;
+    }
+    const std::vector<Edge>& get_incident_edges(int i) const
+    {
+        return incident_edges[i];
+    }
+
+
     std::vector<Point>::const_iterator nodes_begin() const
     {
         return nodes.begin();
@@ -63,22 +77,8 @@ public:
     {
         return edges.end();
     }
-    std::vector<Edge>::const_iterator incident_edges_begin(int i) const
-    {
-        return incident_edges[i].begin();
-    }
-    std::vector<Edge>::const_iterator incident_edges_end(int i) const
-    {
-        return incident_edges[i].end();
-    }
-    std::set<int>::const_iterator adjacent_nodes_begin(int i) const
-    {
-        return adjacent_nodes[i].begin();
-    }
-    std::set<int>::const_iterator adjacent_nodes_end(int i) const
-    {
-        return adjacent_nodes[i].end();
-    }
+
+
 protected:
     std::vector<Point> nodes;
     std::vector<Edge> edges;

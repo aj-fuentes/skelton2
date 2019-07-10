@@ -24,18 +24,14 @@ TEST_CASE("Graph","[graph]")
         REQUIRE(*it++==Edge{1,2});
         REQUIRE(*it++==Edge{0,3});
 
-        auto it2 = g.incident_edges_begin(0);
-        REQUIRE(*it2++==Edge{0,1});
-        REQUIRE(*it2++==Edge{0,2});
-        REQUIRE(*it2++==Edge{0,3});
+        auto edges = g.get_incident_edges(0);
+        REQUIRE(edges==std::vector<Edge>{Edge(0,1),Edge(0,2),Edge(0,3)});
 
-        it2 = g.incident_edges_begin(1);
-        REQUIRE(*it2++==Edge{0,1});
-        REQUIRE(*it2++==Edge{1,2});
+        edges = g.get_incident_edges(1);
+        REQUIRE(edges==std::vector<Edge>{Edge(0,1),Edge(1,2)});
 
-        it2 = g.incident_edges_begin(2);
-        REQUIRE(*it2++==Edge{0,2});
-        REQUIRE(*it2++==Edge{1,2});
+        edges = g.get_incident_edges(2);
+        REQUIRE(edges==std::vector<Edge>{Edge(0,2),Edge(1,2)});
     }
     SECTION("Test node classification")
     {

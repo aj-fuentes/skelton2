@@ -200,7 +200,7 @@ void ConvexHull::sort_incident_edges() {
     if(planar) return;
     for(int i=0;i<nodes.size();i++)
     {
-        UnitVector n = nodes[i]; //the nodes here are normalized
+        UnitVector n = nodes[i]; //nodes were normalized
         UnitVector u = nodes[*adjacent_nodes[i].begin()].normalized();
         UnitVector v = n.cross(u).normalized();
 
@@ -218,9 +218,17 @@ EdgeDual ConvexHull::edge_dual(const Edge e) const
     const int j = edge_faces.at(e)[1];
     const UnitVector u = normals[i];
     const UnitVector w = normals[j];
-    const UnitVector v = planar?
-        (nodes[e.j]-nodes[e.i]).cross(u).normalized() :
-        (           u.cross(w)).cross(u).normalized();
-    const double phi = std::atan2(w.dot(v),w.dot(u));
-    return EdgeDual(u,v,phi);
+
+    if(nodes.size()==1) //dangling
+    {
+        assert(e.i==e.j and e.i==0);
+        const UnitVector v = nodes[0].cross(u).normalized();
+        return EdgeDual(u,v,2*PI_);
+    } else {
+        const UnitVector v = planar?
+            (nodes[e.j]-nodes[e.i]).cross(u).normalized() :
+            (           u.cross(w)).cross(u).normalized();
+        const double phi = nodes.size()==2? 2*PI_ : std::atan2(w.dot(v),w.dot(u));
+        return EdgeDual(u,v,phi);
+    }
 }

@@ -8,6 +8,7 @@ set(TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/test_field.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_graph.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_convex_hull.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_scaffolder.cpp
     # ${CMAKE_CURRENT_SOURCE_DIR}/test-ArcLength.cpp
     # ${CMAKE_CURRENT_SOURCE_DIR}/test-AxelVisualization.cpp
     # ${CMAKE_CURRENT_SOURCE_DIR}/test-ConstantMetric.cpp
