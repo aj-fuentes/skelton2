@@ -119,5 +119,6 @@ include_directories(${CMAKE_SOURCE_DIR}/src)
 ## Input
 ## #################################################################
 
-add_subdirectory (src)
-add_subdirectory (test)
+add_subdirectory(src)
+add_subdirectory(test)
+add_subdirectory(icesl_plugin)

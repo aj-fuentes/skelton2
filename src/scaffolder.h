@@ -3,8 +3,8 @@
 
 #include "base.h"
 #include "convex_hull.h"
-#include <iostream>
 
+#include <iostream>
 #include <string>
 
 class Scaffolder;

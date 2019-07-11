@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <cstdio>
 #include <glpk.h>
 
 std::string Scaffolder::cell_sum_variable(int i, const GraphEdge& e)
@@ -288,14 +289,48 @@ void Scaffolder::compute()
     solve_mip();
     read_mip_solution();
 
+    //delete model and solution files
+    remove(mip_lp_file.c_str());
+    remove(mip_sol_file.c_str());
+
     compute_cells();
     compute_cells_match();
 }
 
+struct cmp_points
+{
+    bool operator() (const Point& a, const Point& b) const
+    {
+        if(abs(a(0)-b(0))<TOL) //first coords are equal
+        {
+            if(abs(a(1)-b(1))<TOL) //second coords are equal
+            {
+                if(a(2)<=b(2)-TOL) //last coord is less
+                    return true;
+            } else if (a(1)<=b(1)-TOL) //second coord is less
+                return true;
+        } else if (a(0)<=b(0)-TOL) //first coord is less
+            return true;
+
+        return false;
+    }
+};
+
+int insert_point(std::vector<Point>& points, std::map<Point,int,cmp_points>& point_idxs, const Point& p)
+{
+    if(point_idxs.find(p)==point_idxs.end())
+    {
+        points.push_back(p);
+        point_idxs[p] = points.size()-1;
+    }
+    return point_idxs[p];
+}
+
 void Scaffolder::save_to_file(const std::string& fname) const
 {
-
     std::vector<Point> points;
+    std::map<Point,int,cmp_points> point_idxs;
+
     std::vector<std::tuple<int,int,int,int>> quads;
 
     for(auto e : g->get_edges())
@@ -307,14 +342,14 @@ void Scaffolder::save_to_file(const std::string& fname) const
         auto& base2 = g->get_node(e.j);
         for(int i=0;i<match.size();i++)
         {
-            auto& p1 = match[i];
-            auto& p2 = match[(i+1)%match.size()];
-            points.push_back(base1+cell1[p1.first]);
-            points.push_back(base2+cell2[p1.second]);
-            points.push_back(base2+cell2[p2.second]);
-            points.push_back(base1+cell1[p2.first]);
-            int k = points.size()-1;
-            quads.push_back({k-3,k-2,k-1,k});
+            auto& m1 = match[i];
+            auto& m2 = match[(i+1)%match.size()];
+            quads.push_back({
+                insert_point(points,point_idxs,base1+cell1[m1.first]),
+                insert_point(points,point_idxs,base2+cell2[m1.second]),
+                insert_point(points,point_idxs,base2+cell2[m2.second]),
+                insert_point(points,point_idxs,base1+cell1[m2.first]),
+            });
         }
     }
 
