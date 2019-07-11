@@ -65,15 +65,10 @@ endif(WIN32)
 ## Dependencies - external
 ## #################################################################
 
-# find_package(Eigen3 REQUIRED)
 add_library(eigen3 INTERFACE IMPORTED)
 set_target_properties(eigen3 PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/external/include/Eigen"
 )
-# include_directories()
-
-# find_package(GSL REQUIRED)
-# include_directories(${GSL_INCLUDE_DIRS})
 
 add_library(gsl STATIC IMPORTED)
 set_target_properties(gsl PROPERTIES

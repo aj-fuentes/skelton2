@@ -1,6 +1,8 @@
 #include "catch.hpp"
 
 #include "graph.h"
+#include <fstream>
+#include <cstdio>
 
 TEST_CASE("Graph","[graph]")
 {
@@ -18,11 +20,7 @@ TEST_CASE("Graph","[graph]")
 
     SECTION("Test edge structure")
     {
-        auto it = g.edges_begin();
-        REQUIRE(*it++==Edge{0,1});
-        REQUIRE(*it++==Edge{0,2});
-        REQUIRE(*it++==Edge{1,2});
-        REQUIRE(*it++==Edge{0,3});
+        REQUIRE(g.get_edges()==std::vector<Edge>{Edge(0,1),Edge(0,2),Edge(1,2),Edge(0,3)});
 
         auto edges = g.get_incident_edges(0);
         REQUIRE(edges==std::vector<Edge>{Edge(0,1),Edge(0,2),Edge(0,3)});
@@ -57,4 +55,33 @@ TEST_CASE("Graph test extreme situations","[graph]")
 
     REQUIRE(g.get_incident_edges(0)==std::vector<Edge>{Edge(0,0)});
     REQUIRE(g.get_incident_edges(1)==std::vector<Edge>{Edge(1,1)});
+}
+
+TEST_CASE("Graph test read from file","[graph]")
+{
+    std::string fname = "__test_graph_file__.obj";
+
+    std::ofstream fout(fname);
+    fout << "v 0.0 0.0 0.0" << std::endl;
+    fout << "v 1.0 0.0 0.0" << std::endl;
+    fout << "v 0.0 1.0 0.0" << std::endl;
+    fout << "v 0.0 0.0 1.0" << std::endl;
+    fout << "l 1 0" << std::endl;
+    fout << "l 2 0" << std::endl;
+    fout << "l 2 1" << std::endl;
+    fout << "l 3 0" << std::endl;
+    fout.close();
+
+    Graph g;
+
+    g.read_from_file(fname);
+
+    std::vector<Point> points{Point(0.0,0.0,0.0),Point(1.0,0.0,0.0),Point(0.0,1.0,0.0),Point(0.0,0.0,1.0)};
+    std::vector<Edge> edges{Edge(0,1),Edge(0,2),Edge(1,2),Edge(0,3)};
+
+    REQUIRE(g.get_nodes()==points);
+    REQUIRE(g.get_edges()==edges);
+
+    // remove("__test_graph_file__.obj");
+
 }
