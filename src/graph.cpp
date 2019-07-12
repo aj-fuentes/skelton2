@@ -71,7 +71,7 @@ void Graph::read_from_file(const std::string& fname)
                 std::vector<int> idxs;
                 while(lin >> idx)
                 {
-                    idxs.push_back(idx);
+                    idxs.push_back(idx-1);
                 }
                 for(int i=0;i<idxs.size()-1;i++)
                     add_edge(idxs[i],idxs[i+1]);

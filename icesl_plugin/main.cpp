@@ -45,7 +45,7 @@ int main(int argc, char** argv)
     std::cout << "Scaffold computed" << std::endl;
     #endif
 
-    s.save_to_file(temp_dir_path + output_file);
+    s.save_to_file(temp_dir_path + output_file,true);
 
     return 0;
 }

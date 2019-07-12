@@ -53,7 +53,7 @@ public:
     }
 
     void compute();
-    void save_to_file(const std::string&) const;
+    void save_to_file(const std::string&,bool=false) const;
 
 private:
 

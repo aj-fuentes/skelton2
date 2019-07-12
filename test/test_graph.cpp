@@ -66,10 +66,10 @@ TEST_CASE("Graph test read from file","[graph]")
     fout << "v 1.0 0.0 0.0" << std::endl;
     fout << "v 0.0 1.0 0.0" << std::endl;
     fout << "v 0.0 0.0 1.0" << std::endl;
-    fout << "l 1 0" << std::endl;
-    fout << "l 2 0" << std::endl;
     fout << "l 2 1" << std::endl;
-    fout << "l 3 0" << std::endl;
+    fout << "l 3 1" << std::endl;
+    fout << "l 3 2" << std::endl;
+    fout << "l 4 1" << std::endl;
     fout.close();
 
     Graph g;

@@ -4,6 +4,7 @@
 #include <sstream>
 #include <cstdio>
 #include <glpk.h>
+#include <exception>
 
 std::string Scaffolder::cell_sum_variable(int i, const GraphEdge& e)
 {
@@ -229,7 +230,8 @@ void Scaffolder::compute_cells()
                 else
                 {
                     //assert that last point of next arc is equal to last point in `points`
-                    assert((points[points.size()-1]-e_dual.get_point(e_dual.phi)).norm()<TOL);
+                    // if((points[points.size()-1]-e_dual.get_point(e_dual.phi)).norm()>TOL);
+                    //     throw std::logic_error("Cannot construct closed cell");
                     for(int k=arc_subdiv-1;k>=0;k--)
                         points.push_back(e_dual.get_point((k*e_dual.phi)/arc_subdiv));
                 }
@@ -242,8 +244,8 @@ void Scaffolder::compute_cells()
             auto n = (g->get_node(g_e.j)-g->get_node(g_e.i)).normalized();
             if(i==g_e.j)
                 n = -n;
-            assert(points.size()>2);
-            if(n.cross(points[1]-points[0]).dot(points[2]-points[0])>0)
+            assert(points.size()>1);
+            if(points[0].cross(points[1]).dot(n)>0)
                 std::reverse(points.begin(),points.end());
         }
     }
@@ -256,14 +258,29 @@ void Scaffolder::compute_cells_match()
         const auto& points1 = cells.at({e.i,e});
         const auto& points2 = cells.at({e.j,e});
         //this vector is to move the points sufficiently far away to compute distances
-        const auto ev = 5.0*((g->get_node(e.j)-g->get_node(e.i)).normalized());
+        const auto ev_n = ((g->get_node(e.j)-g->get_node(e.i)).normalized());
+        const auto ev = 5.0*ev_n;
+
         int i = 0;
         double best_dist = 0.0;
         int n = points1.size();
+
+        //verify order of cells
+        for(int j=1;j<n;j++)
+        {
+            if(points1[j].cross(points1[j-1]).dot(ev_n)<0)
+                throw std::logic_error("Error in cell order");
+            if(points2[j].cross(points2[j-1]).dot(ev_n)>0)
+                throw std::logic_error("Error in cell order");
+        }
+
+        //compute first distance candidate
         for(int j=0;j<n;j++)
             best_dist += (points1[j]-points2[n-1-j]+ev).norm();
+
+        //find best distance
         double dist = 0.0;
-        for(int k=1;k<n;k++)
+        for(int k=1;k<n-1;k++)
         {
             dist = 0.0;
             for(int j=0;j<n;j++)
@@ -274,6 +291,7 @@ void Scaffolder::compute_cells_match()
                 i = k;
             }
         }
+
         std::vector<std::pair<int,int>> res;
         for(int j=0;j<n;j++)
             res.push_back({(j+i)%n,n-1-j});
@@ -333,7 +351,7 @@ int insert_point(std::vector<Point>& points, std::map<Point,int,cmp_points>& poi
     return point_idxs[p];
 }
 
-void Scaffolder::save_to_file(const std::string& fname) const
+void Scaffolder::save_to_file(const std::string& fname,bool triangulate) const
 {
     std::vector<Point> points;
     std::map<Point,int,cmp_points> point_idxs;
@@ -370,15 +388,26 @@ void Scaffolder::save_to_file(const std::string& fname) const
     }
     for(auto& q : quads)
     {
-        fout << "f ";
-        fout << std::get<0>(q) + 1 << " ";
-        fout << std::get<1>(q) + 1 << " ";
-        fout << std::get<2>(q) + 1 <<  " ";
-        fout << std::get<3>(q) + 1 << std::endl;
-    }
-    for(auto e : g->get_edges())
-    {
-        fout << "l " << e.i + 1 << " " << e.j + 1 << std::endl;
+        if(triangulate) //output two triangles per quad
+        {
+            fout << "f ";
+            fout << std::get<0>(q) + 1 << " ";
+            fout << std::get<1>(q) + 1 << " ";
+            fout << std::get<2>(q) + 1 << std::endl;
+
+            fout << "f ";
+            fout << std::get<2>(q) + 1 << " ";
+            fout << std::get<3>(q) + 1 << " ";
+            fout << std::get<0>(q) + 1 << std::endl;
+        }
+        else
+        {
+            fout << "f ";
+            fout << std::get<0>(q) + 1 << " ";
+            fout << std::get<1>(q) + 1 << " ";
+            fout << std::get<2>(q) + 1 << " ";
+            fout << std::get<3>(q) + 1 << std::endl;
+        }
     }
     fout.close();
 }
