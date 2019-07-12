@@ -203,54 +203,87 @@ void Scaffolder::read_mip_solution()
     }
 }
 
+void Scaffolder::compute_cell(int i, int j)
+{
+    //i is the node in the skeleton graph
+    //j is the node in the convex hull
+    //j coincides with the j-th incident edge to the i-th node in the skeleton graph
+    auto g_e = g->get_incident_edges(i)[j];
+
+    std::pair<int,GraphEdge> key{i,g_e};
+    cells[key] = std::vector<Point>();
+    auto& points = cells[key];
+
+    //compute cell points
+    for(auto ch_e : chulls[i].get_incident_edges(j))
+    {
+        const int arc_subdiv = var_values[arc_variable(i,ch_e)];
+        const EdgeDual e_dual = chulls[i].edge_dual(ch_e);
+        if(points.empty())
+            points.push_back(e_dual.u);
+        //check if first point of next arc is equal to last point in `points`
+        if((points[points.size()-1]-e_dual.u).norm()<TOL)
+            for(int k=1;k<=arc_subdiv;k++)
+                points.push_back(e_dual.get_point((k*e_dual.phi)/arc_subdiv));
+        else
+        {
+            // assert that last point of next arc is equal to last point in `points`
+            if((points[points.size()-1]-e_dual.get_point(e_dual.phi)).norm()>TOL)
+                throw std::logic_error("Error: cannot construct closed cell");
+            for(int k=arc_subdiv-1;k>=0;k--)
+                points.push_back(e_dual.get_point((k*e_dual.phi)/arc_subdiv));
+        }
+    }
+    //assert last point coincides with first one
+    if((points[points.size()-1]-points[0]).norm()>TOL)
+        throw std::logic_error("Error: bad cell construction");
+    points.pop_back(); //last point coincides with first one
+
+    if(points.size()<3)
+        throw std::logic_error("Error: cell must have at least three points");
+
+    //sort cell points
+    auto n = (g->get_node(g_e.j)-g->get_node(g_e.i)).normalized();
+    if(i==g_e.j)
+        n = -n;
+
+    if(points[0].cross(points[1]).dot(n)>0)
+        std::reverse(points.begin(),points.end());
+}
+
 void Scaffolder::compute_cells()
 {
+    //we do a first pass over the cells to compute non-danglings
+    //then for danglings we project the connected cell, unless it is also a dangling
+
+    std::vector<int> dangling_idxs;
     for(int i=0;i<chulls.size();i++) //i is the node in the skeleton graph
     {
-        for(int j=0;j<chulls[i].get_nodes().size();j++) //j is the node in the convex hull
+        if(g->is_dangling(i)) //danglings processed later
+            dangling_idxs.push_back(i);
+        else
+            for(int j=0;j<chulls[i].get_nodes().size();j++) //j is the node in the convex hull
+                compute_cell(i,j);
+    }
+    for(int i : dangling_idxs)
+    {
+        const int j = 0; //index in the convex hull is always 0 for danlings
+        const auto& e = g->get_incident_edges(i)[0];
+        const int k = e.j!=i? e.j : e.i;//the node connected with this dangling
+        if(g->is_dangling(k)) //if dangling, just keep the standard computation
+            compute_cell(i,j);
+        else
         {
-            //j coincides with the j-th incident edge to the i-th node in the skeleton graph
-            auto g_e = g->get_incident_edges(i)[j];
-
-            std::pair<int,GraphEdge> key{i,g_e};
-            cells[key] = std::vector<Point>();
-            auto& points = cells[key];
-
-            //compute cell points
-            for(auto ch_e : chulls[i].get_incident_edges(j))
+            //take connected cell and project onto this node
+            std::vector<Point> points;
+            const UnitVector n = (g->get_node(k)-g->get_node(i)).normalized();
+            for(const auto& p : cells.at({k,e}))
             {
-                const int arc_subdiv = var_values[arc_variable(i,ch_e)];
-                const EdgeDual e_dual = chulls[i].edge_dual(ch_e);
-                if(points.empty())
-                    points.push_back(e_dual.u);
-                //check if first point of next arc is equal to last point in `points`
-                if((points[points.size()-1]-e_dual.u).norm()<TOL)
-                    for(int k=1;k<=arc_subdiv;k++)
-                        points.push_back(e_dual.get_point((k*e_dual.phi)/arc_subdiv));
-                else
-                {
-                    // assert that last point of next arc is equal to last point in `points`
-                    if((points[points.size()-1]-e_dual.get_point(e_dual.phi)).norm()>TOL)
-                        throw std::logic_error("Error: cannot construct closed cell");
-                    for(int k=arc_subdiv-1;k>=0;k--)
-                        points.push_back(e_dual.get_point((k*e_dual.phi)/arc_subdiv));
-                }
+                points.push_back(p-p.dot(n)*n);
             }
-            //assert last point coincides with first one
-            if((points[points.size()-1]-points[0]).norm()>TOL)
-                throw std::logic_error("Error: bad cell construction");
-            points.pop_back(); //last point coincides with first one
-
-            if(points.size()<3)
-                throw std::logic_error("Error: cell must have at least three points");
-
-            //sort cell points
-            auto n = (g->get_node(g_e.j)-g->get_node(g_e.i)).normalized();
-            if(i==g_e.j)
-                n = -n;
-
-            if(points[0].cross(points[1]).dot(n)>0)
-                std::reverse(points.begin(),points.end());
+            //reverse the order of the projected cells to match the current node
+            std::reverse(points.begin(),points.end());
+            cells[std::pair<int,GraphEdge>{i,e}] = points;
         }
     }
 }

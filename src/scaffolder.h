@@ -63,6 +63,7 @@ private:
     void read_mip_solution();
     void compute_cells_match();
     void compute_cells();
+    void compute_cell(int,int);
 
     int cell_sum_value(int i,const GraphEdge& e)
     {

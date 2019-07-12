@@ -31,7 +31,7 @@ public:
     int add_node(const Point&);
     bool add_edge(int,int);
     void compute();
-    EdgeDual edge_dual(const Edge) const;
+    EdgeDual edge_dual(const Edge&) const;
     bool is_planar() const
     {
         return planar;

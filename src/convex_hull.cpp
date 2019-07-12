@@ -211,7 +211,7 @@ void ConvexHull::sort_incident_edges() {
     }
 }
 
-EdgeDual ConvexHull::edge_dual(const Edge e) const
+EdgeDual ConvexHull::edge_dual(const Edge& e) const
 {
     const int i = edge_faces.at(e)[0];
     const int j = edge_faces.at(e)[1];
