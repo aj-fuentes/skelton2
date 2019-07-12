@@ -357,6 +357,7 @@ void Scaffolder::save_to_file(const std::string& fname,bool triangulate) const
     std::map<Point,int,cmp_points> point_idxs;
 
     std::vector<std::tuple<int,int,int,int>> quads;
+    std::vector<std::tuple<int,int,int>> tris;
 
     for(auto e : g->get_edges())
     {
@@ -375,6 +376,28 @@ void Scaffolder::save_to_file(const std::string& fname,bool triangulate) const
                 insert_point(points,point_idxs,base2+cell2[m2.second]),
                 insert_point(points,point_idxs,base1+cell1[m2.first]),
             });
+        }
+        if(g->is_dangling(e.i))
+        {
+            for(int i=0;i<cell1.size();i++)
+            {
+                tris.push_back({
+                    insert_point(points,point_idxs,base1+cell1[i]),
+                    insert_point(points,point_idxs,base1+cell1[(i+1)%cell1.size()]),
+                    insert_point(points,point_idxs,base1+(g->get_node(e.i)-g->get_node(e.j)).normalized())
+                });
+            }
+        }
+        if(g->is_dangling(e.j))
+        {
+            for(int i=0;i<cell2.size();i++)
+            {
+                tris.push_back({
+                    insert_point(points,point_idxs,base2+cell2[i]),
+                    insert_point(points,point_idxs,base2+cell2[(i+1)%cell2.size()]),
+                    insert_point(points,point_idxs,base2+(g->get_node(e.j)-g->get_node(e.i)).normalized())
+                });
+            }
         }
     }
 
@@ -408,6 +431,13 @@ void Scaffolder::save_to_file(const std::string& fname,bool triangulate) const
             fout << std::get<2>(q) + 1 << " ";
             fout << std::get<3>(q) + 1 << std::endl;
         }
+    }
+    for(auto& t : tris)
+    {
+        fout << "f ";
+        fout << std::get<0>(t) + 1 << " ";
+        fout << std::get<1>(t) + 1 << " ";
+        fout << std::get<2>(t) + 1 << std::endl;
     }
     fout.close();
 }
