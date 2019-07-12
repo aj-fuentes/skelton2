@@ -137,3 +137,34 @@ TEST_CASE("Cube scaffold")
         s.save_to_file("cube_scaff.obj");
     }
 }
+
+
+TEST_CASE("Part of cube scaffold")
+{
+    auto g = Graph_ptr(new Graph());
+    g->add_node(Point(0,0,0));
+    g->add_node(Point(5,0,0));
+    g->add_node(Point(0,5,0));
+
+    g->add_node(Point(0,0,5));
+    g->add_node(Point(5,0,5));
+    g->add_node(Point(0,5,5));
+
+    g->add_edge(0,1);
+    g->add_edge(0,2);
+
+    g->add_edge(3,4);
+    g->add_edge(3,5);
+
+    g->add_edge(0,3);
+
+    Scaffolder s(g);
+
+    SECTION("Standard scaffold")
+    {
+        s.set_mip_lp_file("part_cube_scaff.mod");
+        s.set_mip_sol_file("part_cube_scaff.sol");
+        s.compute();
+        s.save_to_file("part_cube_scaff.obj");
+    }
+}

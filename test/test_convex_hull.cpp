@@ -3,7 +3,7 @@
 #include "convex_hull.h"
 #include <set>
 
-#define VEQUAL(a,b) (((a)-(b)).norm())==Approx(0.0)
+#define VEQUAL(a,b) (((a)-(b)).norm())==Approx(0.0).margin(TOL)
 
 TEST_CASE("ConvexHull","[convex_hull]")
 {
@@ -47,42 +47,38 @@ TEST_CASE("ConvexHull","[convex_hull]")
     }
 }
 
-TEST_CASE("ConvexHull planar","[convex_hull]")
+TEST_CASE("ConvexHull of triangle","[convex_hull]")
 {
-    SECTION("Convex hull of a triangle")
-    {
-        std::vector<Point> points = {Point(1,0,0),Point(0,1,0),Point(-1,-1,0).normalized()};
-        ConvexHull chull(points);
-        chull.compute();
+    std::vector<Point> points = {Point(1,0,0),Point(0,1,0),Point(-1,-1,0).normalized()};
+    ConvexHull chull(points);
+    chull.compute();
 
-        const Point barycenter = std::accumulate(points.begin(),points.end(),Point(0,0,0));
+    REQUIRE(chull.is_planar());
 
-        REQUIRE(chull.is_planar());
+    auto edges = chull.get_incident_edges(0);
+    REQUIRE(edges==std::vector<Edge>{Edge(0,1),Edge(0,2)});
 
-        auto edges = chull.get_incident_edges(0);
-        REQUIRE(edges==std::vector<Edge>{Edge(0,1),Edge(0,2)});
+    edges = chull.get_incident_edges(1);
+    REQUIRE(edges==std::vector<Edge>{Edge(0,1),Edge(1,2)});
 
-        edges = chull.get_incident_edges(1);
-        REQUIRE(edges==std::vector<Edge>{Edge(0,1),Edge(1,2)});
+    edges = chull.get_incident_edges(2);
+    REQUIRE(edges==std::vector<Edge>{Edge(1,2),Edge(0,2)});
 
-        edges = chull.get_incident_edges(2);
-        REQUIRE(edges==std::vector<Edge>{Edge(1,2),Edge(0,2)});
+    auto edual = chull.edge_dual(Edge(0,1));
+    REQUIRE(edual.u==UnitVector(0,0,1));
+    REQUIRE(edual.v.cross(edual.u).dot(0.5*(points[0]+points[1]))==Approx(0).margin(TOL));
+    REQUIRE(edual.phi==Approx(PI_));
 
-        auto edual = chull.edge_dual(Edge(0,1));
-        REQUIRE(edual.u==UnitVector(0,0,1));
-        REQUIRE(edual.v.cross(edual.u).dot(0.5*(points[0]+points[1]))==Approx(0).margin(TOL));
-        REQUIRE(edual.phi==Approx(PI_));
+    edual = chull.edge_dual(Edge(0,2));
+    REQUIRE(edual.u==UnitVector(0,0,1));
+    REQUIRE(edual.v.cross(edual.u).dot(0.5*(points[0]+points[2]))==Approx(0).margin(TOL));
+    REQUIRE(edual.phi==Approx(PI_));
 
-        edual = chull.edge_dual(Edge(0,2));
-        REQUIRE(edual.u==UnitVector(0,0,1));
-        REQUIRE(edual.v.cross(edual.u).dot(0.5*(points[0]+points[2]))==Approx(0).margin(TOL));
-        REQUIRE(edual.phi==Approx(PI_));
+    edual = chull.edge_dual(Edge(1,2));
+    REQUIRE(edual.u==UnitVector(0,0,1));
+    REQUIRE(edual.v.cross(edual.u).dot(0.5*(points[1]+points[2]))==Approx(0).margin(TOL));
+    REQUIRE(edual.phi==Approx(PI_));
 
-        edual = chull.edge_dual(Edge(1,2));
-        REQUIRE(edual.u==UnitVector(0,0,1));
-        REQUIRE(edual.v.cross(edual.u).dot(0.5*(points[1]+points[2]))==Approx(0).margin(TOL));
-        REQUIRE(edual.phi==Approx(PI_));
-    }
 }
 
 TEST_CASE("ConvexHull 2 nodes","[convex_hull]")
@@ -118,4 +114,39 @@ TEST_CASE("ConvexHull 1 node","[convex_hull]")
     REQUIRE(edual.u.dot(points[0])==Approx(0).margin(TOL));
     REQUIRE(edual.v.dot(points[0])==Approx(0).margin(TOL));
     REQUIRE(edual.phi==Approx(2*PI_));
+}
+
+TEST_CASE("ConvexHull 3 nodes")
+{
+    std::vector<Point> points = {Point(1,0,0),Point(0,1,0),Point(0,0,1)};
+    ConvexHull chull(points);
+    chull.compute();
+
+    REQUIRE(chull.is_planar());
+
+    auto edges = chull.get_incident_edges(0);
+    REQUIRE(edges==std::vector<Edge>{Edge(0,1),Edge(0,2)});
+
+    edges = chull.get_incident_edges(1);
+    REQUIRE(edges==std::vector<Edge>{Edge(0,1),Edge(1,2)});
+
+    edges = chull.get_incident_edges(2);
+    REQUIRE(edges==std::vector<Edge>{Edge(1,2),Edge(0,2)});
+
+    auto edual = chull.edge_dual(Edge(0,1));
+    const auto n = UnitVector(1,1,1).normalized();
+
+    REQUIRE(VEQUAL(edual.u,n));
+    REQUIRE(edual.v.cross(edual.u).dot(0.5*(points[0]+points[1]))==Approx(0).margin(TOL));
+    REQUIRE(edual.phi==Approx(PI_));
+
+    edual = chull.edge_dual(Edge(0,2));
+    REQUIRE(VEQUAL(edual.u,n));
+    REQUIRE(edual.v.cross(edual.u).dot(0.5*(points[0]+points[2]))==Approx(0).margin(TOL));
+    REQUIRE(edual.phi==Approx(PI_));
+
+    edual = chull.edge_dual(Edge(1,2));
+    REQUIRE(VEQUAL(edual.u,n));
+    REQUIRE(edual.v.cross(edual.u).dot(0.5*(points[1]+points[2]))==Approx(0).margin(TOL));
+    REQUIRE(edual.phi==Approx(PI_));
 }

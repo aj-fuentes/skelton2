@@ -4,10 +4,12 @@
 
 #include "scaffolder.h"
 
+// #define DEBUG_ICESL_PLUGIN
+
 int main(int argc, char** argv)
 {
     std::string skeleton_file, output_file, temp_dir_path = "./";
-    std::string usage_error = "skelton <skeleton_file> <output_file> <temp_dir_path>";
+    std::string usage_error = "skelton <skeleton_file> <output_file_name> [<temp_dir_path>=\"./\"]";
     if(argc<3)
     {
         std::cerr << usage_error << std::endl;
@@ -22,12 +24,16 @@ int main(int argc, char** argv)
         temp_dir_path = temp_dir_path + "/";
 
     auto g = Graph_ptr(new Graph());
-    g->add_node(Point(0,0,0));
-    g->add_node(Point(5,0,0));
-    g->add_node(Point(0,5,0));
-    g->add_edge(0,1);
-    g->add_edge(0,2);
-    g->add_edge(1,2);
+
+    #ifdef DEBUG_ICESL_PLUGIN
+    std::cout << "Readind skeleton graph from " << skeleton_file << std::endl;
+    #endif
+
+    g->read_from_file(skeleton_file);
+
+    #ifdef DEBUG_ICESL_PLUGIN
+    std::cout << "Skeleton graph read" << std::endl;
+    #endif
 
     Scaffolder s(g);
 
@@ -35,7 +41,11 @@ int main(int argc, char** argv)
     s.set_mip_sol_file(temp_dir_path + "__icesl_plugin__.sol");
     s.compute();
 
-    s.save_to_file(temp_dir_path + "icesl_plugin.obj");
+    #ifdef DEBUG_ICESL_PLUGIN
+    std::cout << "Scaffold computed" << std::endl;
+    #endif
+
+    s.save_to_file(temp_dir_path + output_file);
 
     return 0;
 }

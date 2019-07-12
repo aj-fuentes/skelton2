@@ -42,7 +42,7 @@ void Scaffolder::compute_convex_hulls()
         std::vector<Point> points;
         for(auto e : g->get_incident_edges(i))
             points.push_back(g->get_node(e.i!=i? e.i : e.j)-node);
-        chulls.push_back(ConvexHull(points,true));
+        chulls.emplace_back(points,true);
     }
 }
 
@@ -222,16 +222,20 @@ void Scaffolder::compute_cells()
                 const EdgeDual e_dual = chulls[i].edge_dual(ch_e);
                 if(points.empty())
                     points.push_back(e_dual.u);
+                //check if first point of next arc is equal to last point in `points`
                 if((points[points.size()-1]-e_dual.u).norm()<TOL)
                     for(int k=1;k<=arc_subdiv;k++)
                         points.push_back(e_dual.get_point((k*e_dual.phi)/arc_subdiv));
                 else
                 {
+                    //assert that last point of next arc is equal to last point in `points`
                     assert((points[points.size()-1]-e_dual.get_point(e_dual.phi)).norm()<TOL);
                     for(int k=arc_subdiv-1;k>=0;k--)
                         points.push_back(e_dual.get_point((k*e_dual.phi)/arc_subdiv));
                 }
             }
+            //assert last point coincides with first one
+            assert((points[points.size()-1]-points[0]).norm()<TOL);
             points.pop_back(); //last point coincides with first one
 
             //sort cell points
@@ -249,19 +253,21 @@ void Scaffolder::compute_cells_match()
 {
     for(auto e : g->get_edges())
     {
-        auto& points1 = cells.at({e.i,e});
-        auto& points2 = cells.at({e.j,e});
+        const auto& points1 = cells.at({e.i,e});
+        const auto& points2 = cells.at({e.j,e});
+        //this vector is to move the points sufficiently far away to compute distances
+        const auto ev = 5.0*((g->get_node(e.j)-g->get_node(e.i)).normalized());
         int i = 0;
         double best_dist = 0.0;
         int n = points1.size();
         for(int j=0;j<n;j++)
-            best_dist += (points1[j]-points2[n-1-j]).norm();
+            best_dist += (points1[j]-points2[n-1-j]+ev).norm();
         double dist = 0.0;
         for(int k=1;k<n;k++)
         {
             dist = 0.0;
             for(int j=0;j<n;j++)
-                dist += (points1[(j+k)%n]-points2[n-1-j]).norm();
+                dist += (points1[(j+k)%n]-points2[n-1-j]+ev).norm();
             if(dist<best_dist)
             {
                 best_dist = dist;
@@ -369,6 +375,10 @@ void Scaffolder::save_to_file(const std::string& fname) const
         fout << std::get<1>(q) + 1 << " ";
         fout << std::get<2>(q) + 1 <<  " ";
         fout << std::get<3>(q) + 1 << std::endl;
+    }
+    for(auto e : g->get_edges())
+    {
+        fout << "l " << e.i + 1 << " " << e.j + 1 << std::endl;
     }
     fout.close();
 }

@@ -22,11 +22,11 @@ ConvexHull::ConvexHull(std::vector<Point> points, bool compute_now) : planar(fal
     for(auto p : points)
     {
         assert(p.norm()>TOL);
-        p.normalize();
-        add_node(p);
-        point_coords.push_back(p(0));
-        point_coords.push_back(p(1));
-        point_coords.push_back(p(2));
+        const auto q = p.normalized();
+        add_node(q);
+        point_coords.push_back(q(0));
+        point_coords.push_back(q(1));
+        point_coords.push_back(q(2));
     }
     barycenter = std::accumulate(nodes.begin(),nodes.end(),Point(0,0,0))/nodes.size();
     if(compute_now)
@@ -81,15 +81,15 @@ void ConvexHull::compute_planar() {
     }
     else
     {
-        const UnitVector u = nodes[0];
-        const UnitVector n = u.cross(nodes[1]).normalized();
+        const UnitVector u = (nodes[0]-barycenter).normalized();
+        const UnitVector n = u.cross(nodes[1]-barycenter).normalized();
         const UnitVector v = n.cross(u).normalized();
 
         std::vector<std::pair<double,int>> angles_idx;
         for(int i=0; i<nodes.size();++i)
         {
             auto p = nodes[i];
-            angles_idx.push_back({std::atan2(p.dot(v),p.dot(u)),i});
+            angles_idx.push_back({std::atan2(v.dot(p-barycenter),u.dot(p-barycenter)),i});
         }
         std::sort(angles_idx.begin(),angles_idx.end());
 
