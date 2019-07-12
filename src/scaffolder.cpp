@@ -59,7 +59,6 @@ void Scaffolder::setup_mip(std::ostream& mip_lp)
         {
             arc_variables.push_back(arc_variable(i,e));
             mip_lp << "var " << arc_variable(i,e) << ", integer, >= ";
-            // TODO: put the actual number of subdivisions according to the length of the arc
             mip_lp << arc_min_subdiv(i,e) << ";" << std::endl;
         }
     }
@@ -285,7 +284,7 @@ void Scaffolder::compute_cells_match()
 
         //find best distance
         double dist = 0.0;
-        for(int k=1;k<n-1;k++)
+        for(int k=1;k<n;k++)
         {
             dist = 0.0;
             for(int j=0;j<n;j++)
