@@ -238,7 +238,8 @@ void Scaffolder::compute_cells()
             auto n = (g->get_node(g_e.j)-g->get_node(g_e.i)).normalized();
             if(i==g_e.j)
                 n = -n;
-            if(points[0].cross(points[1]).dot(n)<0)
+            assert(points.size()>2);
+            if(n.cross(points[1]-points[0]).dot(points[2]-points[0])>0)
                 std::reverse(points.begin(),points.end());
         }
     }
