@@ -1,6 +1,7 @@
 #include "scaffolder.h"
 
 #include <fstream>
+#include <iomanip>
 #include <sstream>
 #include <cstdio>
 #include <glpk.h>
@@ -402,6 +403,7 @@ void Scaffolder::save_to_file(const std::string& fname,bool triangulate) const
     }
 
     std::ofstream fout(fname);
+    fout << std::fixed << std::setprecision(5);
     for(auto& p : points)
     {
         fout << "v ";
