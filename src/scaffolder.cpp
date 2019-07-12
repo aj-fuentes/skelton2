@@ -230,22 +230,26 @@ void Scaffolder::compute_cells()
                         points.push_back(e_dual.get_point((k*e_dual.phi)/arc_subdiv));
                 else
                 {
-                    //assert that last point of next arc is equal to last point in `points`
-                    // if((points[points.size()-1]-e_dual.get_point(e_dual.phi)).norm()>TOL);
-                    //     throw std::logic_error("Cannot construct closed cell");
+                    // assert that last point of next arc is equal to last point in `points`
+                    if((points[points.size()-1]-e_dual.get_point(e_dual.phi)).norm()>TOL)
+                        throw std::logic_error("Error: cannot construct closed cell");
                     for(int k=arc_subdiv-1;k>=0;k--)
                         points.push_back(e_dual.get_point((k*e_dual.phi)/arc_subdiv));
                 }
             }
             //assert last point coincides with first one
-            assert((points[points.size()-1]-points[0]).norm()<TOL);
+            if((points[points.size()-1]-points[0]).norm()>TOL)
+                throw std::logic_error("Error: bad cell construction");
             points.pop_back(); //last point coincides with first one
+
+            if(points.size()<3)
+                throw std::logic_error("Error: cell must have at least three points");
 
             //sort cell points
             auto n = (g->get_node(g_e.j)-g->get_node(g_e.i)).normalized();
             if(i==g_e.j)
                 n = -n;
-            assert(points.size()>1);
+
             if(points[0].cross(points[1]).dot(n)>0)
                 std::reverse(points.begin(),points.end());
         }

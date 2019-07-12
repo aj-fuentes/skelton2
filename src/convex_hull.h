@@ -15,7 +15,8 @@ struct EdgeDual
     EdgeDual(UnitVector u, UnitVector v, double phi) :
         u(u), v(v), phi(phi)
     {
-        assert(phi>0);
+        if(phi<=0)
+            throw std::logic_error("Error: edge dual with zero or negative angle span");
     }
     Point get_point(double t) const
     {

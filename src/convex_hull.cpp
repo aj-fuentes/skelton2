@@ -1,7 +1,6 @@
 #include "convex_hull.h"
 
 #include <iostream>
-#include <cassert>
 #include <numeric>
 #include <cmath>
 
@@ -21,7 +20,6 @@ ConvexHull::ConvexHull(std::vector<Point> points, bool compute_now) : planar(fal
 {
     for(auto p : points)
     {
-        assert(p.norm()>TOL);
         const auto q = p.normalized();
         add_node(q);
         point_coords.push_back(q(0));
@@ -117,7 +115,8 @@ void ConvexHull::compute_planar() {
 
 void ConvexHull::compute()
 {
-    assert(nodes.size()>0);
+    if(nodes.size()==0)
+        throw std::logic_error("Error: zero points to compute convex hull");
 
     orgQhull::Qhull qhull;
     const double *pointCoordinates = &point_coords[0];
@@ -180,7 +179,8 @@ void ConvexHull::compute()
                 edge_faces[e].push_back(new_face_id);
             else if(edge_faces[e][1]!=new_face_id)
                 edge_faces[e].push_back(new_face_id);
-            assert(edge_faces[e][0]==new_face_id or edge_faces[e][1]==new_face_id);
+            if(not (edge_faces[e][0]==new_face_id or edge_faces[e][1]==new_face_id))
+                throw std::logic_error("Error: face does not correspond to edge");
         }
     }
 
@@ -189,7 +189,6 @@ void ConvexHull::compute()
         {
             std::cout << "Edge (" << kv.first.i <<"," << kv.first.j << ") faces= ";
             std::cout << kv.second[0] << "," << kv.second[1] << std::endl;
-            assert(kv.second.size()==2);
         }
     #endif
 
@@ -221,7 +220,8 @@ EdgeDual ConvexHull::edge_dual(const Edge e) const
 
     if(nodes.size()==1) //dangling
     {
-        assert(e.i==e.j and e.i==0);
+        if(not (e.i==e.j and e.i==0))
+            throw std::logic_error("Error: wrong dangling edge in convex hull");
         const UnitVector v = nodes[0].cross(u).normalized();
         return EdgeDual(u,v,2*PI_);
     }
