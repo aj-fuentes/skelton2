@@ -55,6 +55,8 @@ TEST_CASE("ConvexHull planar","[convex_hull]")
         ConvexHull chull(points);
         chull.compute();
 
+        const Point barycenter = std::accumulate(points.begin(),points.end(),Point(0,0,0));
+
         REQUIRE(chull.is_planar());
 
         auto edges = chull.get_incident_edges(0);
@@ -68,20 +70,18 @@ TEST_CASE("ConvexHull planar","[convex_hull]")
 
         auto edual = chull.edge_dual(Edge(0,1));
         REQUIRE(edual.u==UnitVector(0,0,1));
-        REQUIRE(edual.v.dot(points[0]-points[1])==Approx(0).margin(TOL));
+        REQUIRE(edual.v.cross(edual.u).dot(0.5*(points[0]+points[1]))==Approx(0).margin(TOL));
         REQUIRE(edual.phi==Approx(PI_));
 
         edual = chull.edge_dual(Edge(0,2));
         REQUIRE(edual.u==UnitVector(0,0,1));
-        REQUIRE(edual.v.dot(points[0]-points[2])==Approx(0).margin(TOL));
+        REQUIRE(edual.v.cross(edual.u).dot(0.5*(points[0]+points[2]))==Approx(0).margin(TOL));
         REQUIRE(edual.phi==Approx(PI_));
 
         edual = chull.edge_dual(Edge(1,2));
         REQUIRE(edual.u==UnitVector(0,0,1));
-        REQUIRE(edual.v.dot(points[1]-points[2])==Approx(0).margin(TOL));
+        REQUIRE(edual.v.cross(edual.u).dot(0.5*(points[1]+points[2]))==Approx(0).margin(TOL));
         REQUIRE(edual.phi==Approx(PI_));
-
-
     }
 }
 

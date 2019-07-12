@@ -224,10 +224,23 @@ EdgeDual ConvexHull::edge_dual(const Edge e) const
         assert(e.i==e.j and e.i==0);
         const UnitVector v = nodes[0].cross(u).normalized();
         return EdgeDual(u,v,2*PI_);
-    } else {
-        const UnitVector v = planar?
-            (nodes[e.j]-nodes[e.i]).cross(u).normalized() :
-            (           u.cross(w)).cross(u).normalized();
+    }
+    else if (nodes.size()==2) //articulation
+    {
+        const UnitVector v = (nodes[0]+nodes[1]).normalized();
+        return EdgeDual(u,v,2*PI_);
+    }
+    else if(planar)
+    {
+        const Vector outward_vector = (0.5*(nodes[e.j]+nodes[e.i])-barycenter).normalized();
+        UnitVector v = u.cross(nodes[e.j]-nodes[e.i]).normalized();
+        if(outward_vector.dot(v)<0)
+            v = -v;
+        return EdgeDual(u,v,PI_);
+    }
+    else
+    {
+        const UnitVector v = (u.cross(w)).cross(u).normalized();
         const double phi = nodes.size()==2? 2*PI_ : std::atan2(w.dot(v),w.dot(u));
         return EdgeDual(u,v,phi);
     }
