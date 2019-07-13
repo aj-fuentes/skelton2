@@ -76,29 +76,6 @@ TEST_CASE("Scaffolder 4 points")
     }
 }
 
-TEST_CASE("Scaffolder 3-joint")
-{
-    auto g = Graph_ptr(new Graph());
-    g->add_node(Point(0,0,0));
-    g->add_node(Point(5,0,0));
-    g->add_node(Point(5,5,0));
-    g->add_node(Point(0,5,0));
-
-    g->add_edge(0,1);
-    g->add_edge(0,2);
-    g->add_edge(0,3);
-
-    Scaffolder s(g);
-
-    SECTION("Standard scaffold")
-    {
-        s.set_mip_lp_file("3-joint_scaff.mod");
-        s.set_mip_sol_file("3-joint_scaff.sol");
-        s.compute();
-        s.save_to_file("3-joint_scaff.obj");
-    }
-}
-
 TEST_CASE("Cube scaffold")
 {
     auto g = Graph_ptr(new Graph());
@@ -169,43 +146,84 @@ TEST_CASE("Part of cube scaffold")
     }
 }
 
-// TEST_CASE("Scaffolder read from file")
-// {
-//     auto g = Graph_ptr(new Graph());
-//     g->add_node(Point(0.000000,0.000000,0.000000));
-//     g->add_node(Point(2.500000,0.000000,-5.000000));
-//     g->add_node(Point(2.500000,4.330127,0.000000));
-//     g->add_node(Point(-1.250000,2.165064,-5.000000));
-//     g->add_node(Point(-5.000000,0.000000,0.000000));
-//     g->add_node(Point(-1.250000,-2.165064,-5.000000));
-//     g->add_node(Point(2.500000,-4.330127,0.000000));
-//     g->add_node(Point(3.535534,0.000000,3.535534));
-//     g->add_node(Point(-1.767767,3.061862,3.535534));
-//     g->add_node(Point(-1.767767,-3.061862,3.535534));
+TEST_CASE("Scaffolder 3sym")
+{
+    auto g = Graph_ptr(new Graph());
+    g->add_node(Point(0.000000,0.000000,0.000000));
+    g->add_node(Point(2.500000,0.000000,-5.000000));
+    g->add_node(Point(2.500000,4.330127,0.000000));
+    g->add_node(Point(-1.250000,2.165064,-5.000000));
+    g->add_node(Point(-5.000000,0.000000,0.000000));
+    g->add_node(Point(-1.250000,-2.165064,-5.000000));
+    g->add_node(Point(2.500000,-4.330127,0.000000));
+    g->add_node(Point(3.535534,0.000000,3.535534));
+    g->add_node(Point(-1.767767,3.061862,3.535534));
+    g->add_node(Point(-1.767767,-3.061862,3.535534));
 
-//     g->add_edge(0,1);
-//     g->add_edge(0,2);
-//     g->add_edge(0,3);
-//     g->add_edge(0,4);
-//     g->add_edge(0,5);
-//     g->add_edge(0,6);
-//     g->add_edge(0,7);
-//     g->add_edge(0,8);
-//     g->add_edge(0,9);
-//     // g->add_edge(2,7);
-//     // g->add_edge(4,8);
-//     // g->add_edge(6,9);
+    g->add_edge(0,1);
+    g->add_edge(0,2);
+    g->add_edge(0,3);
+    g->add_edge(0,4);
+    g->add_edge(0,5);
+    g->add_edge(0,6);
+    g->add_edge(0,7);
+    g->add_edge(0,8);
+    g->add_edge(0,9);
+    g->add_edge(2,7);
+    g->add_edge(4,8);
+    g->add_edge(6,9);
 
-//     Scaffolder s(g);
+    Scaffolder s(g);
 
-//     SECTION("Standard scaffold")
-//     {
-//         s.set_mip_lp_file("3sym1_scaff.mod");
-//         s.set_mip_sol_file("3sym1_scaff.sol");
-//         s.compute();
-//         s.save_to_file("3sym1_scaff.obj");
-//     }
-// }
+    SECTION("Standard scaffold")
+    {
+        s.set_mip_lp_file("3sym1_scaff.mod");
+        s.set_mip_sol_file("3sym1_scaff.sol");
+        s.compute();
+        s.save_to_file("3sym1_scaff.obj");
+    }
+
+    SECTION("Regular scaffold")
+    {
+        s.set_mip_lp_file("3sym1_reg_scaff.mod");
+        s.set_mip_sol_file("3sym1_reg_scaff.sol");
+        s.set_regular(true);
+        s.compute();
+        s.save_to_file("3sym1_reg_scaff.obj");
+    }
+
+}
+
+TEST_CASE("Scaffolder 3-joint")
+{
+    auto g = Graph_ptr(new Graph());
+    g->add_node(Point(0,0,0));
+    g->add_node(Point(5,0,0));
+    g->add_node(Point(5,5,0));
+    g->add_node(Point(0,5,0));
+
+    g->add_edge(0,1);
+    g->add_edge(0,2);
+    g->add_edge(0,3);
+
+    Scaffolder s(g);
+
+    SECTION("Standard scaffold")
+    {
+        s.set_mip_lp_file("3-joint_scaff.mod");
+        s.set_mip_sol_file("3-joint_scaff.sol");
+        s.compute();
+        s.save_to_file("3-joint_scaff.obj");
+    }
+    SECTION("Regular scaffold")
+    {
+        s.set_mip_lp_file("3-joint_reg_scaff.mod");
+        s.set_mip_sol_file("3-joint_reg_scaff.sol");
+        s.compute();
+        s.save_to_file("3-joint_reg_scaff.obj");
+    }
+}
+
 
 TEST_CASE("Scaffolder 4-joint")
 {
@@ -223,10 +241,20 @@ TEST_CASE("Scaffolder 4-joint")
 
     Scaffolder s(g);
 
-    s.set_mip_lp_file("4-joint_scaff.mod");
-    s.set_mip_sol_file("4-joint_scaff.sol");
-    s.compute();
-    s.save_to_file("4-joint_scaff.obj");
+    SECTION("Standard scaffold")
+    {
+        s.set_mip_lp_file("4-joint_scaff.mod");
+        s.set_mip_sol_file("4-joint_scaff.sol");
+        s.compute();
+        s.save_to_file("4-joint_scaff.obj");
+    }
+    SECTION("Regular scaffold")
+    {
+        s.set_mip_lp_file("4-joint_reg_scaff.mod");
+        s.set_mip_sol_file("4-joint_reg_scaff.sol");
+        s.compute();
+        s.save_to_file("4-joint_reg_scaff.obj");
+    }
 }
 
 TEST_CASE("Scaffolder 5-joint")
@@ -247,8 +275,18 @@ TEST_CASE("Scaffolder 5-joint")
 
     Scaffolder s(g);
 
-    s.set_mip_lp_file("5-joint_scaff.mod");
-    s.set_mip_sol_file("5-joint_scaff.sol");
-    s.compute();
-    s.save_to_file("5-joint_scaff.obj");
+    SECTION("Standard scaffold")
+    {
+        s.set_mip_lp_file("5-joint_scaff.mod");
+        s.set_mip_sol_file("5-joint_scaff.sol");
+        s.compute();
+        s.save_to_file("5-joint_scaff.obj");
+    }
+    SECTION("Regular scaffold")
+    {
+        s.set_mip_lp_file("5-joint_reg_scaff.mod");
+        s.set_mip_sol_file("5-joint_reg_scaff.sol");
+        s.compute();
+        s.save_to_file("5-joint_reg_scaff.obj");
+    }
 }
