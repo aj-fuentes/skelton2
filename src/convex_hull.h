@@ -56,7 +56,7 @@ private:
 
     std::vector<Face> faces;
     std::vector<UnitVector> normals; //of the faces
-    std::map<Edge,std::vector<int>> edge_faces; //two per edge
+    std::map<Edge,std::set<int>> edge_faces; //two per edge
 
     std::vector<std::set<int>> node_faces; //faces incident to a node
 };

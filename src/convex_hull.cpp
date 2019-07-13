@@ -9,6 +9,7 @@
 #include <libqhullcpp/QhullFacetList.h>
 #include <libqhullcpp/QhullVertex.h>
 #include <libqhullcpp/QhullVertexSet.h>
+#include <libqhullcpp/QhullRidge.h>
 #include <libqhullcpp/QhullError.h>
 
 #include <libqhull_r/libqhull_r.h>
@@ -43,7 +44,7 @@ bool ConvexHull::add_edge(int i, int j)
 {
     bool added = Graph::add_edge(i,j);
     if(added)
-        edge_faces.emplace(Edge(i,j),0);
+        edge_faces[Edge(i,j)] = std::set<int>();
     return added;
 }
 
@@ -99,8 +100,8 @@ void ConvexHull::compute_planar() {
             auto j = (i+1)%nodes.size();
             Edge e(i,j);
             add_edge(e.i,e.j);
-            edge_faces[e].push_back(0);
-            edge_faces[e].push_back(1);
+            edge_faces[e].insert(0);
+            edge_faces[e].insert(1);
         }
 
         faces.push_back(face0);
@@ -131,6 +132,10 @@ void ConvexHull::compute()
         return compute_planar();
     }
 
+    #ifdef DEBUG_CONVEX_HULL
+        std::cout << "Number of facets " << qhull.facetList().size() << std::endl;
+    #endif
+
     for(auto facet : qhull.facetList())
     {
         // if (not facet.isGood()) continue;
@@ -140,10 +145,13 @@ void ConvexHull::compute()
         auto new_face_id = faces.size()-1;
 
         #ifdef DEBUG_CONVEX_HULL
+            std::cout << "Qhull Facet" << std::endl;
+            std::cout << facet << std::endl;
             std::cout << "Face id=" << new_face_id << std::endl;
         #endif
 
-        for(auto vertex : facet.vertices())
+        const auto& vertices = facet.vertices();
+        for(const auto& vertex : vertices)
         {
             #ifdef DEBUG_CONVEX_HULL
                 std::cout << "\tNode id=" << vertex.point().id();
@@ -169,43 +177,122 @@ void ConvexHull::compute()
         #endif
 
         //build edges of this face, and add info to edge_faces
-        for (int k=0;k<new_face.size();k++)
+        if(vertices.size()==3)
         {
-            int i = new_face[k];
-            int j = new_face[(k+1) % new_face.size()];
-            Edge e(i,j);
-            add_edge(e.i,e.j);
-            if(edge_faces[e].size()==0)
-                edge_faces[e].push_back(new_face_id);
-            else if(edge_faces[e][1]!=new_face_id)
-                edge_faces[e].push_back(new_face_id);
-            if(not (edge_faces[e][0]==new_face_id or edge_faces[e][1]==new_face_id))
-                throw std::logic_error("Error: face does not correspond to edge");
+            //in a triangle all vertices are connected by edges
+            for (int k=0;k<3;k++)
+            {
+                int i = new_face[k];
+                int j = new_face[(k+1) % new_face.size()];
+                const Edge e(i,j);
+                add_edge(e.i,e.j);
+                edge_faces[e].insert(new_face_id);
+            }
+        }
+        else
+        {
+            //facet must have at least 4 vertices
+            if(vertices.size()<3)
+            {
+                std::stringstream ss;
+                ss << "The face " << new_face_id << " has only " << vertices.size() << " vertices";
+                throw std::logic_error(ss.str());
+            }
+            const auto ridges = facet.ridges();
+            //facet must have at least 4 ridges/edges
+            if(ridges.size()<4)
+            {
+                std::stringstream ss;
+                ss << "The face " << new_face_id << " has " << vertices.size() << " vertices" << std::endl;
+                ss << "and " << ridges.size() << " edges";
+                throw std::logic_error(ss.str());
+            }
+            for(const auto& ridge : ridges)
+            {
+                auto it = ridge.vertices().begin();
+                int i = (*it).point().id();
+                int j = (*(++it)).point().id();
+                const Edge e(i,j);
+                add_edge(e.i,e.j);
+                edge_faces[e].insert(new_face_id);
+            }
         }
     }
 
-    #ifdef DEBUG_CONVEX_HULL
-        for(auto kv : edge_faces)
+    for(auto p : edge_faces)
+    {
+        if(p.second.size()!=2)
         {
-            std::cout << "Edge (" << kv.first.i <<"," << kv.first.j << ") faces= ";
-            std::cout << kv.second[0] << "," << kv.second[1] << std::endl;
+            std::stringstream ss;
+            ss << p.first << " has " << p.second.size() << " adjacente faces" << std::endl;
+            throw std::logic_error(ss.str());
         }
-    #endif
+        #ifdef DEBUG_CONVEX_HULL
+            {
+                std::cout << "Edge (" << p.first.i <<"," << p.first.j << ") faces= ";
+                auto it = p.second.begin();
+                std::cout << *it << "," << *(++it) << std::endl;
+            }
+        #endif
+    }
+
 
     sort_incident_edges();
 }
 
 void ConvexHull::sort_incident_edges() {
     if(planar) return;
+
+    #ifdef DEBUG_CONVEX_HULL
+        std::cout << "Sorting incident edges " << std::endl;
+    #endif
+
+    // for(int i=0;i<nodes.size();i++)
+    // {
+        // const auto& n = nodes[i];
+        // auto& edges = incident_edges[i];
+
+        // std::cout << "Incident edges number " << edges.size() << std::endl;
+        // if(edges.size()==0)
+        // {
+        //     std::cout << "Edges incident to node " << i << " are 0" <<std::endl;
+        //     std::cout << "Node i = " << n.transpose() <<std::endl;
+        // }
+        // const auto& e0 = edges[0];
+        // const int j = e0.i==i? e0.j : e0.i;
+        // const auto u = nodes[j];
+        // const auto v = n.cross(u).normalized();
+
+        // std::vector<std::pair<double,int>> angle_idxs;
+        // for(int k=0;k<edges.size();k++)
+        // {
+        //     const auto& e = edges[k];
+        //     const auto w = (nodes[e.i==i? e.j : e.i] - n).normalized();
+        //     angle_idxs.push_back(std::pair<double,int>{atan2(w.dot(v),w.dot(u)),k});
+        // }
+        // std::sort(angle_idxs.begin(),angle_idxs.end());
+
+        // std::vector<Edge> sorted_edges;
+        // std::vector<Edge> prev_edges(edges.begin(),edges.end());
+        // edges.clear();
+        // for(auto p : angle_idxs)
+        //     edges.push_back(prev_edges[p.second]);
+    // }
     for(int i=0;i<nodes.size();i++)
     {
-        UnitVector n = nodes[i]; //nodes were normalized
-        UnitVector u = nodes[*adjacent_nodes[i].begin()].normalized();
-        UnitVector v = n.cross(u).normalized();
+        const auto& n = nodes[i]; //nodes were normalized
+        const auto& e0 = edges[0];
+        const auto u = (nodes[e0.i==i? e0.j : e0.i]-n).normalized();
+        const auto v = n.cross(u).normalized();
 
-        sort(incident_edges[i].begin(),incident_edges[i].end(),[&,this](const Edge& e0, const Edge& e1){
-            Vector w0 = nodes[e0.i==i? e0.j : e0.i]-n; //edge vectors
-            Vector w1 = nodes[e1.i==i? e1.j : e1.i]-n;
+        #ifdef DEBUG_CONVEX_HULL
+            std::cout << "Edges incident to node " << i << " are " << incident_edges[i].size() <<std::endl;
+            std::cout << "Node i = " << n.transpose() <<std::endl;
+        #endif
+
+        std::sort(incident_edges[i].begin(),incident_edges[i].end(),[&,this](const Edge& e0, const Edge& e1){
+            const auto w0 = nodes[e0.i==i? e0.j : e0.i]-n; //edge vectors
+            const auto w1 = nodes[e1.i==i? e1.j : e1.i]-n;
             return std::atan2(w0.dot(v),w0.dot(u))<std::atan2(w1.dot(v),w1.dot(u));
         });
     }
@@ -213,8 +300,9 @@ void ConvexHull::sort_incident_edges() {
 
 EdgeDual ConvexHull::edge_dual(const Edge& e) const
 {
-    const int i = edge_faces.at(e)[0];
-    const int j = edge_faces.at(e)[1];
+    auto it = edge_faces.at(e).begin();
+    const int i = *it;
+    const int j = *(++it);
     const UnitVector u = normals[i];
     const UnitVector w = normals[j];
 

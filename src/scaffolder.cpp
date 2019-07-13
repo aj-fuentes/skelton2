@@ -190,6 +190,10 @@ void Scaffolder::solve_mip()
     // free resources
     glp_mpl_free_wksp(tran);
     glp_delete_prob(mip);
+
+    //delete model and solution files
+    // remove(mip_lp_file.c_str());
+    // remove(mip_sol_file.c_str());
 }
 
 void Scaffolder::read_mip_solution()
@@ -221,15 +225,29 @@ void Scaffolder::compute_cell(int i, int j)
         const EdgeDual e_dual = chulls[i].edge_dual(ch_e);
         if(points.empty())
             points.push_back(e_dual.u);
+
+        // assert that first or last point of next arc is equal to last point in `points`
+        const double first_diff = (points[points.size()-1]-e_dual.u).norm();
+        const double last_diff = (points[points.size()-1]-e_dual.get_point(e_dual.phi)).norm();
+        if(first_diff>TOL and last_diff>TOL)
+        {
+            std::stringstream ss;
+            ss << "Error: cannot construct closed cell " << std::endl;
+            ss << "last point in cell " << points[points.size()-1].transpose() << std::endl;
+            ss << "fist point in next arc " << e_dual.u.transpose() << std::endl;
+            ss << "with diff norm " << first_diff << std::endl;
+            ss << "last point in next arc " << e_dual.get_point(e_dual.phi).transpose() << std::endl;
+            ss << "with diff norm " << last_diff << std::endl;
+
+            throw std::logic_error(ss.str());
+        }
+
         //check if first point of next arc is equal to last point in `points`
-        if((points[points.size()-1]-e_dual.u).norm()<TOL)
+        if(first_diff<TOL)
             for(int k=1;k<=arc_subdiv;k++)
                 points.push_back(e_dual.get_point((k*e_dual.phi)/arc_subdiv));
         else
         {
-            // assert that last point of next arc is equal to last point in `points`
-            if((points[points.size()-1]-e_dual.get_point(e_dual.phi)).norm()>TOL)
-                throw std::logic_error("Error: cannot construct closed cell");
             for(int k=arc_subdiv-1;k>=0;k--)
                 points.push_back(e_dual.get_point((k*e_dual.phi)/arc_subdiv));
         }
@@ -350,10 +368,6 @@ void Scaffolder::compute()
 
     solve_mip();
     read_mip_solution();
-
-    //delete model and solution files
-    remove(mip_lp_file.c_str());
-    remove(mip_sol_file.c_str());
 
     compute_cells();
     compute_cells_match();
