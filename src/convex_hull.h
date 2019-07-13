@@ -22,6 +22,7 @@ struct EdgeDual
     {
         return u*cos(t) + v*sin(t);
     }
+    friend std::ostream& operator <<(std::ostream&,const EdgeDual&);
 };
 
 typedef std::vector<int> Face;

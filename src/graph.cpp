@@ -2,6 +2,8 @@
 
 #include <fstream>
 #include <iostream>
+#include <exception>
+#include <map>
 
 std::ostream& operator <<(std::ostream& os,const Edge& e)
 {
@@ -23,7 +25,10 @@ bool Graph::add_edge(int i, int j)
 
     //check if edge already present
     if(adjacent_nodes[i].find(j)!=adjacent_nodes[i].end())
+    {
+        // std::cerr << "Warning: duplicated edge in graph " << e << std::endl;
         return false;
+    }
 
     edges.push_back(e);
 
@@ -80,4 +85,43 @@ void Graph::read_from_file(const std::string& fname)
     }
 
     fin.close();
+
+    check_graph();
+}
+
+void Graph::check_graph()
+{
+    //check for superflous articulations
+    for(int i=0;i<nodes.size();i++)
+    {
+        if(is_articulation(i))
+        {
+            const Edge e1 = incident_edges[i][0];
+            const Edge e2 = incident_edges[i][1];
+            const auto u = nodes[e1.i]-nodes[e1.j];
+            const auto v = nodes[e2.i]-nodes[e2.j];
+            if(u.cross(v).norm()<TOL) //parallel edges
+            {
+                std::stringstream ss;
+                ss << "Error: superflous articulation" << std::endl;
+                ss << "The node " << i << " is an articulation with ";
+                ss << "parallel incident edges " << std::endl;
+                ss << e1 << " and " << e2;
+                throw std::domain_error(ss.str());
+            }
+        }
+    }
+    //check for duplicated points
+    std::map<Point,int,ComparePoints> point_idxs;
+    for(int i=0;i<nodes.size();i++)
+    {
+        if(point_idxs.find(nodes[i])!=point_idxs.end())
+        {
+            std::stringstream ss;
+            ss << "Error: duplicated nodes " << std::endl;
+            ss << "The node " << i << "[" << nodes[i].transpose() <<"]";
+            ss << " is already in the graph as node " << point_idxs[nodes[i]];
+            throw std::domain_error(ss.str());
+        }
+    }
 }

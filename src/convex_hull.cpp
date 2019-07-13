@@ -17,6 +17,11 @@
 
 // #define DEBUG_CONVEX_HULL
 
+std::ostream& operator <<(std::ostream& os,const EdgeDual& e)
+{
+    return os << "edge_dual([" << e.u.transpose() << "]--[" << e.get_point(e.phi).transpose() << "]," << ")";
+}
+
 ConvexHull::ConvexHull(std::vector<Point> points, bool compute_now) : planar(false)
 {
     for(auto p : points)
@@ -236,6 +241,16 @@ void ConvexHull::compute()
         #endif
     }
 
+    //check number of incident edges
+    for(int i=0;i<incident_edges.size();i++)
+        if(incident_edges[i].size()<3)
+        {
+            std::stringstream ss;
+            ss << "Point " << i << " has only ";
+            ss << incident_edges[i].size() << " incident edges";
+            ss << " in a non-planar convex hull (min 3)";
+            throw std::logic_error(ss.str());
+        }
 
     sort_incident_edges();
 }

@@ -64,11 +64,14 @@ public:
         return incident_edges[i];
     }
 
+    void check_graph();
+
 protected:
     std::vector<Point> nodes;
     std::vector<Edge> edges;
     std::vector<std::vector<Edge>> incident_edges;
     std::vector<std::set<int>> adjacent_nodes;
+
 };
 
 #endif

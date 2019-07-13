@@ -24,7 +24,9 @@ public:
     Scaffolder(const Graph_ptr& graph) :
         g(graph), max_arc_angle(0.9*PI_), min_cell_quads(4), regular(false), symmetric(false),
         mip_lp_file("__scaffolder_mip_lp__.mod"), mip_sol_file("__scaffolder_mip_lp__.sol")
-    {}
+    {
+        g->check_graph();
+    }
     void set_regular(bool reg)
     {
         regular = reg;

@@ -24,6 +24,25 @@ typedef Eigen::Vector3d UnitVector;
 typedef Eigen::Matrix3d Matrix;
 typedef Eigen::Matrix3d Frame;
 
+struct ComparePoints
+{
+    bool operator() (const Point& a, const Point& b) const
+    {
+        if(abs(a(0)-b(0))<TOL) //first coords are equal
+        {
+            if(abs(a(1)-b(1))<TOL) //second coords are equal
+            {
+                if(a(2)<=b(2)-TOL) //last coord is less
+                    return true;
+            } else if (a(1)<=b(1)-TOL) //second coord is less
+                return true;
+        } else if (a(0)<=b(0)-TOL) //first coord is less
+            return true;
+
+        return false;
+    }
+};
+
 //Pointers
 // typedef std::shared_ptr<Skeleton> Skeleton_ptr;
 // typedef std::shared_ptr<Field> Field_ptr;

@@ -53,7 +53,7 @@ TEST_CASE("Scaffolder triangle")
     }
 }
 
-TEST_CASE("4 points scaffold")
+TEST_CASE("Scaffolder 4 points")
 {
     auto g = Graph_ptr(new Graph());
     g->add_node(Point(0,0,0));
@@ -76,7 +76,7 @@ TEST_CASE("4 points scaffold")
     }
 }
 
-TEST_CASE("Scaffold 3-Joint")
+TEST_CASE("Scaffolder 3-joint")
 {
     auto g = Graph_ptr(new Graph());
     g->add_node(Point(0,0,0));

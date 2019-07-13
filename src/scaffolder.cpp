@@ -6,6 +6,9 @@
 #include <cstdio>
 #include <glpk.h>
 #include <exception>
+#include <deque>
+
+// #define DEBUG_SCAFFOLDER
 
 std::string Scaffolder::cell_sum_variable(int i, const GraphEdge& e)
 {
@@ -216,45 +219,149 @@ void Scaffolder::compute_cell(int i, int j)
 
     std::pair<int,GraphEdge> key{i,g_e};
     cells[key] = std::vector<Point>();
-    auto& points = cells[key];
 
     //compute cell points
+    std::deque<Point> c_points;
     for(auto ch_e : chulls[i].get_incident_edges(j))
     {
         const int arc_subdiv = var_values[arc_variable(i,ch_e)];
         const EdgeDual e_dual = chulls[i].edge_dual(ch_e);
-        if(points.empty())
-            points.push_back(e_dual.u);
 
-        // assert that first or last point of next arc is equal to last point in `points`
-        const double first_diff = (points[points.size()-1]-e_dual.u).norm();
-        const double last_diff = (points[points.size()-1]-e_dual.get_point(e_dual.phi)).norm();
-        if(first_diff>TOL and last_diff>TOL)
+        //compute points on dual arc
+        std::deque<Point> e_points;
+        for(int k=0;k<=arc_subdiv;k++)
+            e_points.push_back(e_dual.get_point((k*e_dual.phi)/arc_subdiv));
+
+        if(c_points.empty())
         {
-            std::stringstream ss;
-            ss << "Error: cannot construct closed cell " << std::endl;
-            ss << "last point in cell " << points[points.size()-1].transpose() << std::endl;
-            ss << "fist point in next arc " << e_dual.u.transpose() << std::endl;
-            ss << "with diff norm " << first_diff << std::endl;
-            ss << "last point in next arc " << e_dual.get_point(e_dual.phi).transpose() << std::endl;
-            ss << "with diff norm " << last_diff << std::endl;
-
-            throw std::logic_error(ss.str());
+            for(const auto& p : e_points)
+                c_points.push_back(p);
         }
-
-        //check if first point of next arc is equal to last point in `points`
-        if(first_diff<TOL)
-            for(int k=1;k<=arc_subdiv;k++)
-                points.push_back(e_dual.get_point((k*e_dual.phi)/arc_subdiv));
         else
         {
-            for(int k=arc_subdiv-1;k>=0;k--)
-                points.push_back(e_dual.get_point((k*e_dual.phi)/arc_subdiv));
+            //first and last points on cell and arc
+            const auto& first_c = c_points[0];
+            const auto& last_c = c_points[c_points.size()-1];
+            const auto& first_e = e_points[0];
+            const auto& last_e = e_points[e_points.size()-1];
+
+            //assert that first or last point of next arc is equal to
+            //first or last point of cell (two of these are true for
+            //the last edge)
+            const bool ff = (first_c-first_e).norm()<TOL;
+            const bool fl = (first_c-last_e).norm()<TOL;
+            const bool lf = (last_c-first_e).norm()<TOL;
+            const bool ll = (last_c-last_e).norm()<TOL;
+            if(not (ff or fl or lf or ll))
+            {
+                std::stringstream ss;
+                ss << "Error: cannot construct closed cell (arcs not connected) " << std::endl;
+                ss << "Edge list " << std::endl;
+                for(auto out_e : chulls[i].get_incident_edges(j))
+                    ss << out_e << ((out_e==ch_e)? "* " : " ") << chulls[i].edge_dual(out_e) << std::endl;
+
+                throw std::logic_error(ss.str());
+            }
+
+            #ifdef DEBUG_SCAFFOLDER
+                std::cout << "ff=" << ff << " ";
+                std::cout << "fl=" << fl << " ";
+                std::cout << "lf=" << lf << " ";
+                std::cout << "ll=" << ll << std::endl;
+                std::cout << "Points in cell" << std::endl;
+                for(const auto& p : c_points)
+                    std::cout << p.transpose() << std::endl;
+                std::cout << "Points in arc" << std::endl;
+                for(const auto& p : e_points)
+                    std::cout << p.transpose() << std::endl;
+            #endif
+
+            //reverse points in arc if needed
+            //repeated code in the ifs below to correctly handle
+            //the last edge (two paths are true)
+            if(ff)
+            {
+                #ifdef DEBUG_SCAFFOLDER
+                    std::cout << "Doing ff (only one must be done)" << std::endl;
+                #endif
+                //cel *---------+
+                //arc *------x
+                e_points.pop_front(); //fist point of arc is already in cell
+                //arc  ------x
+                while(not e_points.empty())
+                {
+                    c_points.push_front(e_points.front());
+                    e_points.pop_front();
+                }
+                //cell x-------*-------+
+            } else if(ll)
+            {
+                #ifdef DEBUG_SCAFFOLDER
+                    std::cout << "Doing ll (only one must be done)" << std::endl;
+                #endif
+                //cel *---------+
+                //arc    x------+
+                e_points.pop_back(); //last point is already in cell
+                //arc    x------
+                while(not e_points.empty())
+                {
+                    c_points.push_back(e_points.back());
+                    e_points.pop_back();
+                }
+                //cell *---------+-------x
+            } else if(lf)
+            {
+                #ifdef DEBUG_SCAFFOLDER
+                    std::cout << "Doing lf (only one must be done)" << std::endl;
+                #endif
+                //cel *---------+
+                //arc           +------x
+                e_points.pop_front(); //fist point of arc is already in cell
+                //arc            ------x
+                while(not e_points.empty())
+                {
+                    c_points.push_back(e_points.front());
+                    e_points.pop_front();
+                }
+                //cell *---------+-------x
+            } else //fl=true
+            {
+                #ifdef DEBUG_SCAFFOLDER
+                    std::cout << "Doing fl (only one must be done)" << std::endl;
+                #endif
+                //cel        *---------+
+                //arc x------*
+                e_points.pop_back(); //last point of arc is already in cell
+                //arc x------
+                while(not e_points.empty())
+                {
+                    c_points.push_front(e_points.back());
+                    e_points.pop_back();
+                }
+            }
         }
     }
+
+    auto& points = cells[key];
+
+    //fill points of this cell
+    for(const auto& p : c_points)
+        points.push_back(p);
+
     //assert last point coincides with first one
     if((points[points.size()-1]-points[0]).norm()>TOL)
-        throw std::logic_error("Error: bad cell construction");
+    {
+        std::stringstream ss;
+        ss << "Error: cannot construct closed cell (last point not equal to first point) " << std::endl;
+        ss << "Edge list " << std::endl;
+        for(auto out_e : chulls[i].get_incident_edges(j))
+            ss << out_e << " " << chulls[i].edge_dual(out_e) << std::endl;
+        ss << "Cell points " << std::endl;
+        for(auto p : points)
+            ss << p.transpose() << std::endl;
+
+        throw std::logic_error(ss.str());
+    }
     points.pop_back(); //last point coincides with first one
 
     if(points.size()<3)
@@ -373,26 +480,10 @@ void Scaffolder::compute()
     compute_cells_match();
 }
 
-struct cmp_points
-{
-    bool operator() (const Point& a, const Point& b) const
-    {
-        if(abs(a(0)-b(0))<TOL) //first coords are equal
-        {
-            if(abs(a(1)-b(1))<TOL) //second coords are equal
-            {
-                if(a(2)<=b(2)-TOL) //last coord is less
-                    return true;
-            } else if (a(1)<=b(1)-TOL) //second coord is less
-                return true;
-        } else if (a(0)<=b(0)-TOL) //first coord is less
-            return true;
 
-        return false;
-    }
-};
 
-int insert_point(std::vector<Point>& points, std::map<Point,int,cmp_points>& point_idxs, const Point& p)
+// int insert_point(std::vector<Point>& points, std::map<Point,int>& point_idxs, const Point& p)
+int insert_point(std::vector<Point>& points, std::map<Point,int,ComparePoints>& point_idxs, const Point& p)
 {
     if(point_idxs.find(p)==point_idxs.end())
     {
@@ -405,7 +496,8 @@ int insert_point(std::vector<Point>& points, std::map<Point,int,cmp_points>& poi
 void Scaffolder::save_to_file(const std::string& fname,bool triangulate) const
 {
     std::vector<Point> points;
-    std::map<Point,int,cmp_points> point_idxs;
+    std::map<Point,int,ComparePoints> point_idxs;
+    // std::map<Point,int> point_idxs;
 
     std::vector<std::tuple<int,int,int,int>> quads;
     std::vector<std::tuple<int,int,int>> tris;
