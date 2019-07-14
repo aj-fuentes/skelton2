@@ -23,7 +23,8 @@ public:
 
     Scaffolder(const Graph_ptr& graph) :
         g(graph), max_arc_angle(0.9*PI_), min_cell_quads(4), regular(false), symmetric(false),
-        mip_lp_file("__scaffolder_mip_lp__.mod"), mip_sol_file("__scaffolder_mip_lp__.sol")
+        arc_based_optimal_solution(false), mip_lp_file("__scaffolder_mip_lp__.mod"),
+        mip_sol_file("__scaffolder_mip_lp__.sol")
     {
         g->check_graph();
     }
@@ -40,6 +41,10 @@ public:
     void add_symmetry(const std::vector<int>& s)
     {
         symmetries.push_back(s);
+    }
+    void set_arc_based_optimal_solution(bool arc_opt)
+    {
+        arc_based_optimal_solution = arc_opt;
     }
     void set_mip_lp_file(std::string s)
     {
@@ -90,6 +95,7 @@ private:
     int min_cell_quads;
     bool regular;
     bool symmetric;
+    bool arc_based_optimal_solution;
     std::vector<std::vector<int>> symmetries;
 
     std::string mip_lp_file;

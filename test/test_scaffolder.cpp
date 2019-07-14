@@ -113,6 +113,15 @@ TEST_CASE("Cube scaffold")
         s.compute();
         s.save_to_file("cube_scaff.obj");
     }
+    SECTION("Arc optimal scaffold")
+    {
+        s.set_mip_lp_file("cube_arc_reg_scaff.mod");
+        s.set_mip_sol_file("cube_arc_reg_scaff.sol");
+        s.set_regular(true);
+        s.set_arc_based_optimal_solution(true);
+        s.compute();
+        s.save_to_file("cube_arc_reg_scaff.obj");
+    }
 }
 
 
@@ -143,6 +152,22 @@ TEST_CASE("Part of cube scaffold")
         s.set_mip_sol_file("part_cube_scaff.sol");
         s.compute();
         s.save_to_file("part_cube_scaff.obj");
+    }
+    SECTION("Regular scaffold")
+    {
+        s.set_mip_lp_file("part_cube_reg_scaff.mod");
+        s.set_mip_sol_file("part_cube_reg_scaff.sol");
+        s.compute();
+        s.save_to_file("part_cube_reg_scaff.obj");
+    }
+    SECTION("Arc optimal scaffold")
+    {
+        s.set_mip_lp_file("part_cube_arc_reg_scaff.mod");
+        s.set_mip_sol_file("part_cube_arc_reg_scaff.sol");
+        s.set_regular(true);
+        s.set_arc_based_optimal_solution(true);
+        s.compute();
+        s.save_to_file("part_cube_arc_reg_scaff.obj");
     }
 }
 
@@ -192,6 +217,16 @@ TEST_CASE("Scaffolder 3sym")
         s.save_to_file("3sym1_reg_scaff.obj");
     }
 
+    SECTION("Arc optimal scaffold")
+    {
+        s.set_mip_lp_file("3sym1_arc_reg_scaff.mod");
+        s.set_mip_sol_file("3sym1_arc_reg_scaff.sol");
+        s.set_arc_based_optimal_solution(true);
+        s.set_regular(true);
+        s.compute();
+        s.save_to_file("3sym1_arc_reg_scaff.obj");
+    }
+
 }
 
 TEST_CASE("Scaffolder 3-joint")
@@ -219,8 +254,18 @@ TEST_CASE("Scaffolder 3-joint")
     {
         s.set_mip_lp_file("3-joint_reg_scaff.mod");
         s.set_mip_sol_file("3-joint_reg_scaff.sol");
+        s.set_regular(true);
         s.compute();
         s.save_to_file("3-joint_reg_scaff.obj");
+    }
+    SECTION("Arc optimal scaffold")
+    {
+        s.set_mip_lp_file("3-joint_arc_reg_scaff.mod");
+        s.set_mip_sol_file("3-joint_arc_reg_scaff.sol");
+        s.set_regular(true);
+        s.set_arc_based_optimal_solution(true);
+        s.compute();
+        s.save_to_file("3-joint_arc_reg_scaff.obj");
     }
 }
 
@@ -232,7 +277,7 @@ TEST_CASE("Scaffolder 4-joint")
     g->add_node(5*Point(1,1,0).normalized());
     g->add_node(5*Point(0,1,1).normalized());
     g->add_node(5*Point(1,-1,0).normalized());
-    g->add_node(5*Point(-1,1,0).normalized());
+    g->add_node(5*Point(3,2,0).normalized());
 
     g->add_edge(0,1);
     g->add_edge(0,2);
@@ -252,8 +297,18 @@ TEST_CASE("Scaffolder 4-joint")
     {
         s.set_mip_lp_file("4-joint_reg_scaff.mod");
         s.set_mip_sol_file("4-joint_reg_scaff.sol");
+        s.set_regular(true);
         s.compute();
         s.save_to_file("4-joint_reg_scaff.obj");
+    }
+    SECTION("Arc optimal scaffold")
+    {
+        s.set_mip_lp_file("4-joint_arc_reg_scaff.mod");
+        s.set_mip_sol_file("4-joint_arc_reg_scaff.sol");
+        s.set_regular(true);
+        s.set_arc_based_optimal_solution(true);
+        s.compute();
+        s.save_to_file("4-joint_arc_reg_scaff.obj");
     }
 }
 
@@ -264,7 +319,7 @@ TEST_CASE("Scaffolder 5-joint")
     g->add_node(5*Point(1,1,0).normalized());
     g->add_node(5*Point(0,1,1).normalized());
     g->add_node(5*Point(1,-1,0).normalized());
-    g->add_node(5*Point(-1,1,0).normalized());
+    g->add_node(5*Point(3,2,0).normalized());
     g->add_node(5*Point(1,0,1).normalized());
 
     g->add_edge(0,1);
@@ -286,7 +341,17 @@ TEST_CASE("Scaffolder 5-joint")
     {
         s.set_mip_lp_file("5-joint_reg_scaff.mod");
         s.set_mip_sol_file("5-joint_reg_scaff.sol");
+        s.set_regular(true);
         s.compute();
         s.save_to_file("5-joint_reg_scaff.obj");
+    }
+    SECTION("Arc optimal scaffold")
+    {
+        s.set_mip_lp_file("5-joint_arc_reg_scaff.mod");
+        s.set_mip_sol_file("5-joint_arc_reg_scaff.sol");
+        s.set_regular(true);
+        s.set_arc_based_optimal_solution(true);
+        s.compute();
+        s.save_to_file("5-joint_arc_reg_scaff.obj");
     }
 }

@@ -90,10 +90,16 @@ void Scaffolder::setup_mip(std::ostream& mip_lp)
     mip_lp << "minimize quads_bound: ";
     for(int i=0;i<chulls.size();i++)
     {
-        auto mult = g->is_joint(i)? "2*" : "";
+        std::string mult = g->is_joint(i)? "2*" : "";
         auto ch = chulls[i];
         for(auto e : ch.get_edges())
         {
+            if(arc_based_optimal_solution)
+            {
+                std::stringstream ss;
+                ss << 1.0/ch.edge_dual(e).phi << "*";
+                mult = ss.str();
+            }
             mip_lp << " + " << mult << arc_variable(i,e);
         }
     }
@@ -479,8 +485,6 @@ void Scaffolder::compute()
     compute_cells();
     compute_cells_match();
 }
-
-
 
 // int insert_point(std::vector<Point>& points, std::map<Point,int>& point_idxs, const Point& p)
 int insert_point(std::vector<Point>& points, std::map<Point,int,ComparePoints>& point_idxs, const Point& p)
