@@ -199,10 +199,6 @@ void Scaffolder::solve_mip()
     // free resources
     glp_mpl_free_wksp(tran);
     glp_delete_prob(mip);
-
-    //delete model and solution files
-    // remove(mip_lp_file.c_str());
-    // remove(mip_sol_file.c_str());
 }
 
 void Scaffolder::read_mip_solution()
@@ -214,6 +210,9 @@ void Scaffolder::read_mip_solution()
     {
         var_values[var] = val;
     }
+    //delete model and solution files
+    remove(mip_lp_file.c_str());
+    remove(mip_sol_file.c_str());
 }
 
 void Scaffolder::compute_cell(int i, int j)
