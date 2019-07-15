@@ -24,7 +24,7 @@ public:
     {}
     double eval(const Point&) const;
     Vector gradient_eval(const Point&) const;
-    virtual Point shoot_ray(const Point&,const UnitVector&,double) const = 0;
+    virtual Point shoot_ray(const Point&,const UnitVector&,double) const;
     virtual double integrand_function(double,const Point&) const = 0;
     virtual double integrand_derivative_function(double,const Point&,int) const = 0;
     virtual ~Field()
@@ -49,7 +49,6 @@ class SegmentField : public Field
 public:
     SegmentField(const Segment_ptr& skel, const FieldParams a, const FieldParams b, const FieldParams c, const FieldParams th) : Field(skel,a,b,c,th), seg(skel)
     {}
-    Point shoot_ray(const Point&,const UnitVector&,double) const;
     double integrand_function(double, const Point&) const;
     double integrand_derivative_function(double,const Point&,int) const;
     ~SegmentField()

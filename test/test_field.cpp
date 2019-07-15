@@ -3,6 +3,8 @@
 #include "skeleton.h"
 #include "field.h"
 
+#define VEQUAL(a,b) (((a)-(b)).norm())==Approx(0.0).margin(1e-8)
+
 TEST_CASE("SegmentField","[field]")
 {
     Point p = Point::Zero();
@@ -78,4 +80,28 @@ TEST_CASE("SegmentField","[field]")
         REQUIRE(Field::get_normal_param(1.0,0.1)==Approx(1.0/0.758359));
     }
 
+    SECTION("Ray shooting")
+    {
+        double a0 = Field::get_tangential_param(1.0,0.1);
+        double b0 = Field::get_normal_param(1.0,0.1);
+
+        FieldParams a = FieldParams{a0,a0};
+        FieldParams b = FieldParams{b0,b0};
+        FieldParams c = FieldParams{b0,b0};
+        FieldParams th{0.0,0.0};
+
+        Field_ptr field = Field_ptr(new SegmentField(seg,a,b,c,th));
+
+        Point q = field->shoot_ray(Point(2.5,0,0),UnitVector(0.0,0.0,1.0),0.1);
+        REQUIRE(VEQUAL(q,Point(2.5,0,1.0)));
+
+        q = field->shoot_ray(Point(2.5,0,0),UnitVector(0.0,1.0,0.0),0.1);
+        REQUIRE(VEQUAL(q,Point(2.5,1.0,0.0)));
+
+        q = field->shoot_ray(Point(0.0,0,0),UnitVector(-1.0,0.0,0.0),0.1);
+        REQUIRE(VEQUAL(q,Point(-1.0,0,0.0)));
+
+        q = field->shoot_ray(Point(5.0,0,0),UnitVector(1.0,0.0,0.0),0.1);
+        REQUIRE(VEQUAL(q,Point(6.0,0,0.0)));
+    }
 }

@@ -7,29 +7,49 @@
 
 extern "C"
 {
-    struct params {
-        const Point& x;
-        const Field *field;
+    //parameters for function evaluation via GSL
+    struct params
+    {
+        const Point x;
+        const Field* field;
         int idx; //only used for gradient numerical integration
+        const double lv; //only used for ray shooting
+        const UnitVector u; //only used for ray shooting
+
+        params(const Point& x, const Field* field) :
+            x(x), field(field), idx(-1), lv(0.0), u(Point(0,0,0))
+        {}
+        params(const Point& x, const Field* field, const double lv, const UnitVector& u) :
+            x(x), field(field), idx(-1), lv(lv), u(u)
+        {}
     };
 
-    double integrand_function_wrapper(double t,void * extra)
+    double integrand_function_wrapper(double t,void* extra)
     {
         const Field *field = ((params*) extra)->field;
         const Point& x = ((params*) extra)->x;
         return field->integrand_function(t,x);
     }
-    double integrand_derivative_wrapper(double t,void * extra)
+
+    double integrand_derivative_wrapper(double t,void* extra)
     {
         const Field *field = ((params*) extra)->field;
         const Point& x = ((params*) extra)->x;
         int idx = ((params*) extra)->idx;
         return field->integrand_derivative_function(t,x,idx);
     }
-}
 
-extern "C" {
-    double omega_poly(double x, void *extra) {
+    double ray_shooting_wrapper(double t, void* extra)
+    {
+        const Field *field = ((params*) extra)->field;
+        const Point& x = ((params*) extra)->x;
+        const double lv = ((params*) extra)->lv;
+        const UnitVector& u = ((params*) extra)->u;
+        return field->eval(x+t*u)-lv;
+    }
+
+    double omega_poly(double x, void *extra)
+    {
         double lv = *((double*) extra);
         double x2=x*x;
         double x3=x2*x;
@@ -64,7 +84,7 @@ double Field::get_omega_constant(double lv) {
         //     break;
     }
     while (status == GSL_CONTINUE && iter < max_iter);
-    gsl_root_fsolver_free (s);
+    gsl_root_fsolver_free(s);
     return root;
 }
 
@@ -85,7 +105,7 @@ double Field::eval(const Point& x) const
     //setup integration with GSL
     gsl_function F;
     F.function = &integrand_function_wrapper;
-    struct params extra = {x,this,-1};
+    struct params extra(x,this);
     F.params = &extra;
 
     double val;
@@ -106,7 +126,7 @@ Vector Field::gradient_eval(const Point& x) const
     //setup integration with GSL
     gsl_function F;
     F.function = &integrand_derivative_wrapper;
-    struct params extra = {x,this,-1};
+    struct params extra(x,this);
     F.params = &extra;
 
     double val;
@@ -126,6 +146,62 @@ Vector Field::gradient_eval(const Point& x) const
     }
 
     return grad;
+}
+
+Point Field::shoot_ray(const Point& p,const UnitVector& u,double lv) const
+{
+
+    double x_lo = 0.0;
+    double x_hi = std::max(std::max(b[0],b[1]),std::max(c[0],c[1]))*get_eta_constant(lv);
+    auto positive = [&](double t){ return eval(p+t*u)>lv;};
+
+    if(not positive(x_lo))
+    {
+        throw std::logic_error("Error: base shooting point is not inside the surface");
+    }
+
+    int max_iter = 100;
+    while(positive(x_hi))
+    {
+        x_hi += x_hi;
+        if(--max_iter==0)
+        {
+            throw std::logic_error("Error: Could not find a point ouside the surface on the shooting ray");
+        }
+    }
+
+    //setup root finding with GSL
+    gsl_function F;
+    F.function = &ray_shooting_wrapper;
+    struct params extra(p,this,lv,u);
+    F.params = &extra;
+
+    gsl_root_fsolver *s = gsl_root_fsolver_alloc(gsl_root_fsolver_brent);
+    gsl_root_fsolver_set(s, &F, x_lo, x_hi);
+
+    //find root with GSL
+    int status;
+    double root;
+    int iter = 0;
+    max_iter = 100;
+    do
+    {
+        iter++;
+        status = gsl_root_fsolver_iterate(s);
+        root = gsl_root_fsolver_root(s);
+        x_lo = gsl_root_fsolver_x_lower(s);
+        x_hi = gsl_root_fsolver_x_upper(s);
+        status = gsl_root_test_interval(x_lo, x_hi, 1.0e-8, 0.0);
+    }
+    while(status == GSL_CONTINUE && iter < max_iter);
+    gsl_root_fsolver_free(s);
+
+    if(status != GSL_SUCCESS)
+    {
+        throw std::logic_error("Error: could not find intersection point with the shooting ray");
+    }
+
+    return p+root*u;
 }
 
 double SegmentField::integrand_function(double t, const Point& x) const
@@ -193,7 +269,7 @@ double SegmentField::integrand_derivative_function(double t, const Point& x, int
     return d * d * val * da;
 }
 
-Point SegmentField::shoot_ray(const Point& q, const UnitVector& w, const double lv) const
-{
-    return Point::Zero();
-}
+// Point SegmentField::shoot_ray(const Point& p, const UnitVector& u, double lv) const
+// {
+//     return Field::shoot_ray(q,);
+// }
