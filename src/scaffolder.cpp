@@ -250,13 +250,14 @@ void Scaffolder::compute_cell(int i, int j)
             const auto& first_e = e_points[0];
             const auto& last_e = e_points[e_points.size()-1];
 
-            //assert that first or last point of next arc is equal to
-            //first or last point of cell (two of these are true for
-            //the last edge)
+            //compare points
             const bool ff = (first_c-first_e).norm()<TOL;
             const bool fl = (first_c-last_e).norm()<TOL;
             const bool lf = (last_c-first_e).norm()<TOL;
             const bool ll = (last_c-last_e).norm()<TOL;
+
+            //assert that first or last point of next arc is equal to first or last point of cell
+            //(two of these are true for the last edge/arc)
             if(not (ff or fl or lf or ll))
             {
                 std::stringstream ss;
@@ -267,7 +268,6 @@ void Scaffolder::compute_cell(int i, int j)
 
                 throw std::logic_error(ss.str());
             }
-
             #ifdef DEBUG_SCAFFOLDER
                 std::cout << "ff=" << ff << " ";
                 std::cout << "fl=" << fl << " ";
@@ -281,7 +281,6 @@ void Scaffolder::compute_cell(int i, int j)
                     std::cout << p.transpose() << std::endl;
             #endif
 
-            //reverse points in arc if needed
             //repeated code in the ifs below to correctly handle
             //the last edge (two paths are true)
             if(ff)
@@ -293,11 +292,7 @@ void Scaffolder::compute_cell(int i, int j)
                 //arc *------x
                 e_points.pop_front(); //fist point of arc is already in cell
                 //arc  ------x
-                while(not e_points.empty())
-                {
-                    c_points.push_front(e_points.front());
-                    e_points.pop_front();
-                }
+                std::move(e_points.begin(),e_points.end(),std::front_inserter(c_points));
                 //cell x-------*-------+
             } else if(ll)
             {
@@ -308,11 +303,7 @@ void Scaffolder::compute_cell(int i, int j)
                 //arc    x------+
                 e_points.pop_back(); //last point is already in cell
                 //arc    x------
-                while(not e_points.empty())
-                {
-                    c_points.push_back(e_points.back());
-                    e_points.pop_back();
-                }
+                std::move(e_points.rbegin(),e_points.rend(),std::back_inserter(c_points));
                 //cell *---------+-------x
             } else if(lf)
             {
@@ -323,26 +314,19 @@ void Scaffolder::compute_cell(int i, int j)
                 //arc           +------x
                 e_points.pop_front(); //fist point of arc is already in cell
                 //arc            ------x
-                while(not e_points.empty())
-                {
-                    c_points.push_back(e_points.front());
-                    e_points.pop_front();
-                }
+                std::move(e_points.begin(),e_points.end(),std::back_inserter(c_points));
                 //cell *---------+-------x
             } else //fl=true
             {
                 #ifdef DEBUG_SCAFFOLDER
                     std::cout << "Doing fl (only one must be done)" << std::endl;
                 #endif
-                //cel        *---------+
+                //cell       *---------+
                 //arc x------*
                 e_points.pop_back(); //last point of arc is already in cell
                 //arc x------
-                while(not e_points.empty())
-                {
-                    c_points.push_front(e_points.back());
-                    e_points.pop_back();
-                }
+                std::move(e_points.rbegin(),e_points.rend(),std::front_inserter(c_points));
+                //cell x-----*-------+
             }
         }
     }
