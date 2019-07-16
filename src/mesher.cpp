@@ -96,9 +96,9 @@ void Mesher::compute()
 Meshline Mesher::compute_meshline(const Field_ptr& field, const Point& p, const UnitVector& u, const Point& q, const UnitVector& v)
 {
 
-    int num_quads = this->num_quads;
+    int n = std::max(this->num_quads,1);
     if(max_quad_len>TOL)
-        num_quads = std::max(int((p-q).norm()/max_quad_len),num_quads);
+        n = std::max(int(field->skel->l/max_quad_len),n);
 
 
     //frames at extremities of the skeleton
@@ -108,12 +108,12 @@ Meshline Mesher::compute_meshline(const Field_ptr& field, const Point& p, const 
     const UnitVector w0 = F0.transpose()*u;
     const UnitVector w1 = F1.transpose()*v;
 
-    std::vector<Point> points(num_quads+1);
+    std::vector<Point> points(n+1);
 
     const double l = field->skel->l;
-    for(int i=0;i<=num_quads;i++)
+    for(int i=0;i<=n;i++)
     {
-        const double t = i*l/num_quads;
+        const double t = i*l/n;
         const UnitVector wt = ((l-t)*w0 + t*w1).normalized();
         const double th = ((l-t)*field->th[0] + t*field->th[1])/l;
         const double cth = cos(th);
@@ -136,12 +136,12 @@ Meshline Mesher::compute_meshline(const Field_ptr& field, const Point& p, const 
 std::vector<Point> Mesher::compute_tip(const Point& p, const UnitVector& u, const UnitVector& v)
 {
 
-    int num_quads = this->num_quads_tip;
-    std::vector<Point> points(num_quads+1);
+    int n = std::max(this->num_quads_tip,1);
+    std::vector<Point> points(n+1);
 
-    for(int i=0;i<=num_quads;i++)
+    for(int i=0;i<=n;i++)
     {
-        const UnitVector w = (((num_quads-i)*u + i*v)/num_quads).normalized();
+        const UnitVector w = (((n-i)*u + i*v)/n).normalized();
         points[i] = this->field->shoot_ray(p,w,lv);
     }
 
@@ -156,8 +156,6 @@ void Mesher::save_to_file(const std::string& fname) const
     std::vector<std::tuple<int,int,int>> tris;
 
     #ifdef DEBUG_MESHER
-        std::cout << "num_quads " << num_quads << std::endl;
-        std::cout << "num_quads_tip " << num_quads_tip << std::endl;
         std::cout << "Number of pieces " << pieces.size() << std::endl;
         std::cout << "Number of meshline groups " << meshlines.size() << std::endl;
         std::cout << "Saving piece meshes" << std::endl;
@@ -174,7 +172,8 @@ void Mesher::save_to_file(const std::string& fname) const
             const auto& ml1 = mls[i];
             const auto& ml2 = mls[(i+1)%n];
 
-            for(int j=0;j<num_quads;j++)
+            const int nq = ml1.size();
+            for(int j=0;j<nq-1;j++)
             {
                 #ifdef DEBUG_MESHER
                     std::cout << "Creating quad " << j << std::endl;
@@ -216,11 +215,10 @@ void Mesher::save_to_file(const std::string& fname) const
             #ifdef DEBUG_MESHER
                 if(ml1.size()!=ml2.size())
                     throw std::logic_error("Error: tip meshlines does not have same number of points");
-                if(ml1.size()!=num_quads_tip+1)
-                    throw std::logic_error("Error: bad number of points in tip " + std::to_string(ml1.size()) + ", there must be " + std::to_string(num_quads_tip+1));
             #endif
 
-            for(int j=0;j<num_quads_tip-1;j++)
+            const int nq = ml1.size()-1;
+            for(int j=0;j<nq-1;j++)
             {
                 #ifdef DEBUG_MESHER
                     std::cout << "Creating tip quad " << i << std::endl;
@@ -238,9 +236,9 @@ void Mesher::save_to_file(const std::string& fname) const
                 });
             }
 
-            const auto& q0 = ml1[num_quads_tip-1];
-            const auto& q1 = ml1[num_quads_tip];
-            const auto& q2 = ml2[num_quads_tip-1];
+            const auto& q0 = ml1[nq-1];
+            const auto& q1 = ml1[nq];
+            const auto& q2 = ml2[nq-1];
             tris.push_back({
                 indexer.index(q0),
                 indexer.index(q2),

@@ -77,7 +77,7 @@ TEST_CASE("Mesher segment")
             REQUIRE(field->eval(p)==Approx(0.1).margin(1e-8));
     }
 
-    SECTION("Mesher save")
+    SECTION("Mesher save segment")
     {
         mesher->num_quads_tip = 8;
         mesher->num_quads = 10;
@@ -88,7 +88,7 @@ TEST_CASE("Mesher segment")
         mesher->save_to_file("segment_mesh.obj");
     }
 
-    SECTION("Mesher save")
+    SECTION("Mesher save minimal segment")
     {
         mesher->num_quads_tip = 1;
         mesher->num_quads = 1;
@@ -99,17 +99,29 @@ TEST_CASE("Mesher segment")
         mesher->save_to_file("segment_min_mesh.obj");
     }
 
-    SECTION("Mesher save")
+    SECTION("Mesher save good segment")
     {
         scaff->set_max_arc_angle(PI_/10);
 
         mesher->num_quads_tip = 8;
-        // mesher->max_quad_len = 10;
-        mesher->num_quads = 10;
+        mesher->max_quad_len = 0.2;
 
         scaff->compute();
         mesher->compute();
 
         mesher->save_to_file("segment_good_mesh.obj");
+    }
+
+    SECTION("Mesher save long quad mesh")
+    {
+        scaff->set_max_arc_angle(PI_/10);
+
+        mesher->num_quads_tip = 8;
+        mesher->max_quad_len = 10;
+
+        scaff->compute();
+        mesher->compute();
+
+        mesher->save_to_file("segment_long_quad_mesh.obj");
     }
 }
