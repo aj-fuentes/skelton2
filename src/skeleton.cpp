@@ -3,19 +3,19 @@
 Segment::Segment(const Point& p, const UnitVector& v, double l, const UnitVector& n) :
     Skeleton(l), p(p), v(v), n(n), b(v.cross(n))
 {
-    if (not is_unit(v)) {
+    if (abs(v.norm()-1)>TOL) {
         std::ostringstream msg;
         msg << "Segment creation error: v=" << v.transpose();
         msg << " is not a unit vector (norm=" << v.norm() << ")";
         throw new std::logic_error(msg.str());
     }
-    if (not is_unit(n)) {
+    if (abs(n.norm()-1)>TOL) {
         std::ostringstream msg;
         msg << "Segment creation error: n=" << n.transpose();
         msg << " is not a unit vector (norm=" << n.norm() << ")";
         throw new std::logic_error(msg.str());
     }
-    if (not is_perp(v,n))
+    if (v.dot(n)>TOL)
     {
         std::ostringstream msg;
         msg << "Segment creation error: v=" << v.transpose();

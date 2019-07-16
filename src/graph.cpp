@@ -1,10 +1,5 @@
 #include "graph.h"
 
-#include <fstream>
-#include <iostream>
-#include <exception>
-#include <map>
-
 std::ostream& operator <<(std::ostream& os,const Edge& e)
 {
     return os << "edge(" << e.i << "," << e.j << ")";
@@ -112,15 +107,16 @@ void Graph::check_graph()
         }
     }
     //check for duplicated points
-    std::map<Point,int,ComparePoints> point_idxs;
+    PointIndexer indexer;
     for(int i=0;i<nodes.size();i++)
     {
-        if(point_idxs.find(nodes[i])!=point_idxs.end())
+        const int idx = indexer.index(nodes[i]);
+        if(idx!=i)
         {
             std::stringstream ss;
             ss << "Error: duplicated nodes " << std::endl;
             ss << "The node " << i << "[" << nodes[i].transpose() <<"]";
-            ss << " is already in the graph as node " << point_idxs[nodes[i]];
+            ss << " is already in the graph as node " << idx;
             throw std::domain_error(ss.str());
         }
     }

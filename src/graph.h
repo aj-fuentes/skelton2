@@ -2,8 +2,6 @@
 #define GRAPH_H
 
 #include "base.h"
-#include <set>
-#include <ostream>
 
 class Graph;
 typedef std::shared_ptr<Graph> Graph_ptr;

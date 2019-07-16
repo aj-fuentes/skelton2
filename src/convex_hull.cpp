@@ -1,7 +1,5 @@
 #include "convex_hull.h"
 
-#include <iostream>
-#include <numeric>
 #include <cmath>
 
 #include <libqhullcpp/Qhull.h>

@@ -2,7 +2,6 @@
 #define CONVEX_HULL_H
 
 #include "graph.h"
-#include <map>
 
 class ConvexHull;
 typedef std::shared_ptr<ConvexHull> ConvexHull_ptr;

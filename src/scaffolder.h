@@ -4,9 +4,6 @@
 #include "base.h"
 #include "convex_hull.h"
 
-#include <iostream>
-#include <string>
-
 class Scaffolder;
 
 typedef std::shared_ptr<Scaffolder> Scaffolder_ptr;
@@ -24,8 +21,8 @@ public:
     static std::string arc_variable(int,const ConvexHullEdge&);
     static std::pair<int,const ConvexHullEdge> parse_arc_variable(const std::string&);
 
-    static std::vector<std::pair<int,int>> math_cells(const std::vector<Point>& points1,
-    const std::vector<Point>& points2, const Vector& ev);
+    static std::vector<std::pair<int,int>> math_cells(const std::vector<Point>&,
+    const std::vector<Point>&, const Vector=Vector(0,0,0));
 
     Scaffolder(const Graph_ptr& graph) :
         g(graph), max_arc_angle(0.9*PI_), min_cell_quads(4), regular(false), symmetric(false),

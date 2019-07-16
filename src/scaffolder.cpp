@@ -1,12 +1,8 @@
 #include "scaffolder.h"
 
-#include <fstream>
-#include <iomanip>
-#include <sstream>
-#include <cstdio>
-#include <glpk.h>
-#include <exception>
 #include <deque>
+
+#include <glpk.h>
 
 // #define DEBUG_SCAFFOLDER
 
@@ -403,7 +399,7 @@ void Scaffolder::compute_cells()
 }
 
 std::vector<std::pair<int,int>> Scaffolder::math_cells(const std::vector<Point>& points1,
-    const std::vector<Point>& points2, const Vector& ev)
+    const std::vector<Point>& points2, const Vector ev)
 {
     int n = points1.size();
 
@@ -484,22 +480,10 @@ void Scaffolder::compute()
     compute_cells_match();
 }
 
-// int insert_point(std::vector<Point>& points, std::map<Point,int>& point_idxs, const Point& p)
-int insert_point(std::vector<Point>& points, std::map<Point,int,ComparePoints>& point_idxs, const Point& p)
-{
-    if(point_idxs.find(p)==point_idxs.end())
-    {
-        points.push_back(p);
-        point_idxs[p] = points.size()-1;
-    }
-    return point_idxs[p];
-}
-
 void Scaffolder::save_to_file(const std::string& fname,bool triangulate,bool save_skeleton) const
 {
-    std::vector<Point> points;
-    std::map<Point,int,ComparePoints> point_idxs;
-    // std::map<Point,int> point_idxs;
+
+    PointIndexer indexer;
 
     std::vector<std::tuple<int,int,int,int>> quads;
     std::vector<std::tuple<int,int,int>> tris;
@@ -530,37 +514,37 @@ void Scaffolder::save_to_file(const std::string& fname,bool triangulate,bool sav
                 if(n.dot(p3-p0)<0) //use this diagonal
                 {
                     tris.push_back({
-                        insert_point(points,point_idxs,p0),
-                        insert_point(points,point_idxs,p1),
-                        insert_point(points,point_idxs,p2)
+                        indexer.index(p0),
+                        indexer.index(p1),
+                        indexer.index(p2)
                     });
                     tris.push_back({
-                        insert_point(points,point_idxs,p0),
-                        insert_point(points,point_idxs,p2),
-                        insert_point(points,point_idxs,p3)
+                        indexer.index(p0),
+                        indexer.index(p2),
+                        indexer.index(p3)
                     });
                 }
                 else //take the other diagonal, p1-p3
                 {
                     tris.push_back({
-                        insert_point(points,point_idxs,p0),
-                        insert_point(points,point_idxs,p1),
-                        insert_point(points,point_idxs,p3)
+                        indexer.index(p0),
+                        indexer.index(p1),
+                        indexer.index(p3)
                     });
                     tris.push_back({
-                        insert_point(points,point_idxs,p1),
-                        insert_point(points,point_idxs,p2),
-                        insert_point(points,point_idxs,p3)
+                        indexer.index(p1),
+                        indexer.index(p2),
+                        indexer.index(p3)
                     });
                 }
             }
             else //save the quads
             {
                 quads.push_back({
-                    insert_point(points,point_idxs,p0),
-                    insert_point(points,point_idxs,p1),
-                    insert_point(points,point_idxs,p2),
-                    insert_point(points,point_idxs,p3),
+                    indexer.index(p0),
+                    indexer.index(p1),
+                    indexer.index(p2),
+                    indexer.index(p3),
                 });
 
             }
@@ -570,9 +554,9 @@ void Scaffolder::save_to_file(const std::string& fname,bool triangulate,bool sav
             for(int i=0;i<cell1.size();i++)
             {
                 tris.push_back({
-                    insert_point(points,point_idxs,base1+cell1[i]),
-                    insert_point(points,point_idxs,base1+cell1[(i+1)%cell1.size()]),
-                    insert_point(points,point_idxs,base1+(g->get_node(e.i)-g->get_node(e.j)).normalized())
+                    indexer.index(base1+cell1[i]),
+                    indexer.index(base1+cell1[(i+1)%cell1.size()]),
+                    indexer.index(base1+(g->get_node(e.i)-g->get_node(e.j)).normalized())
                 });
             }
         }
@@ -581,17 +565,17 @@ void Scaffolder::save_to_file(const std::string& fname,bool triangulate,bool sav
             for(int i=0;i<cell2.size();i++)
             {
                 tris.push_back({
-                    insert_point(points,point_idxs,base2+cell2[i]),
-                    insert_point(points,point_idxs,base2+cell2[(i+1)%cell2.size()]),
-                    insert_point(points,point_idxs,base2+(g->get_node(e.j)-g->get_node(e.i)).normalized())
+                    indexer.index(base2+cell2[i]),
+                    indexer.index(base2+cell2[(i+1)%cell2.size()]),
+                    indexer.index(base2+(g->get_node(e.j)-g->get_node(e.i)).normalized())
                 });
             }
         }
         if(save_skeleton)
         {
             skel.push_back({
-                insert_point(points,point_idxs,g->get_node(e.i)),
-                insert_point(points,point_idxs,g->get_node(e.j))
+                indexer.index(g->get_node(e.i)),
+                indexer.index(g->get_node(e.j))
             });
         }
     }
@@ -600,7 +584,7 @@ void Scaffolder::save_to_file(const std::string& fname,bool triangulate,bool sav
     std::ofstream fout(fname);
     fout << std::fixed << std::setprecision(5);
     //first the points
-    for(auto& p : points)
+    for(const auto& p : indexer.get_points())
     {
         fout << "v ";
         fout << p(0) << " ";
@@ -608,7 +592,7 @@ void Scaffolder::save_to_file(const std::string& fname,bool triangulate,bool sav
         fout << p(2) << std::endl;
     }
     //then the quads
-    for(auto& q : quads) //if there are quads
+    for(const auto& q : quads) //if there are quads
     {
         fout << "f ";
         fout << std::get<0>(q) + 1 << " ";
@@ -617,7 +601,7 @@ void Scaffolder::save_to_file(const std::string& fname,bool triangulate,bool sav
         fout << std::get<3>(q) + 1 << std::endl;
     }
     //then triangles
-    for(auto& t : tris)
+    for(const auto& t : tris)
     {
         fout << "f ";
         fout << std::get<0>(t) + 1 << " ";
@@ -625,7 +609,7 @@ void Scaffolder::save_to_file(const std::string& fname,bool triangulate,bool sav
         fout << std::get<2>(t) + 1 << std::endl;
     }
     //finally save the skeleton, if any
-    for(auto& s : skel)
+    for(const auto& s : skel)
     {
         fout << "l ";
         fout << s.first + 1 << " ";

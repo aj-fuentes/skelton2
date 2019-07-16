@@ -1,19 +1,15 @@
 #ifndef MESHER_H
 #define MESHER_H
 
+#include "base.h"
 #include "graph.h"
 #include "scaffolder.h"
 #include "field.h"
 
-#include <string>
-#include <map>
-#include <iostream>
-#include <sstream>
-
-
 class Mesher;
 typedef std::shared_ptr<Mesher> Mesher_ptr;
 typedef std::vector<std::pair<Field_ptr,std::vector<int>>> PiecesParam;
+typedef std::vector<Point> Meshline;
 
 class Mesher
 {
@@ -22,8 +18,8 @@ public:
         scaff(scaff), field(field), pieces(pieces), lv(lv), max_quad_len(0.0), num_quads(1),
         num_quads_tip(1)
     {}
-    std::vector<Point> compute_meshline(const Field_ptr&, const Point&, const UnitVector&, const Point&, const UnitVector&);
-    std::vector<Point> compute_tip(const Field_ptr&, const Point&, const UnitVector&, const UnitVector&);
+    Meshline compute_meshline(const Field_ptr&, const Point&, const UnitVector&, const Point&, const UnitVector&);
+    std::vector<Point> compute_tip(const Point&, const UnitVector&, const UnitVector&);
     void compute();
     void save_to_file(const std::string&) const;
 
@@ -43,6 +39,14 @@ private:
     std::map<Point,int> point_idxs;
     std::vector<std::tuple<int,int,int,int>> quads;
     std::vector<std::tuple<int,int,int>> tris;
+
+    std::vector<std::vector<std::pair<int,int>>> cells_match;
+
+    void compute_cells_match();
+    std::pair<const std::vector<Point>&,const std::vector<Point>&> get_cells(const std::vector<int> idxs) const;
+
+    std::vector<std::vector<Meshline>> meshlines; //meshlines are associated to pieces
+    std::vector<Meshline> tips;
 
 };
 #endif
