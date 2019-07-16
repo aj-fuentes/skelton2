@@ -3,12 +3,13 @@ enable_testing()
 
 # Make test executable
 set(TEST_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_skeleton.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_field.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_graph.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_convex_hull.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_scaffolder.cpp
+    main.cpp
+    test_skeleton.cpp
+    test_field.cpp
+    test_graph.cpp
+    test_convex_hull.cpp
+    test_scaffolder.cpp
+    test_mesher.cpp
 )
 
 add_executable(skelton_tests ${TEST_SOURCES})

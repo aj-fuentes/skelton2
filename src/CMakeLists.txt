@@ -9,6 +9,7 @@ set(${PROJECT_NAME}_HEADERS
     graph.h
     convex_hull.h
     scaffolder.h
+    mesher.h
 )
 
 set(${PROJECT_NAME}_SOURCES
@@ -17,6 +18,7 @@ set(${PROJECT_NAME}_SOURCES
     graph.cpp
     convex_hull.cpp
     scaffolder.cpp
+    mesher.cpp
 )
 
 ## #################################################################

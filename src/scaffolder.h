@@ -13,13 +13,19 @@ typedef std::shared_ptr<Scaffolder> Scaffolder_ptr;
 typedef Edge GraphEdge;
 typedef Edge ConvexHullEdge;
 
+class Mesher;
+
 class Scaffolder {
+    friend class Mesher;
 public:
     static std::string cell_sum_variable(int,const GraphEdge&);
     static std::pair<int,const GraphEdge> parse_cell_sum_variable(const std::string&);
 
     static std::string arc_variable(int,const ConvexHullEdge&);
     static std::pair<int,const ConvexHullEdge> parse_arc_variable(const std::string&);
+
+    static std::vector<std::pair<int,int>> math_cells(const std::vector<Point>& points1,
+    const std::vector<Point>& points2, const Vector& ev);
 
     Scaffolder(const Graph_ptr& graph) :
         g(graph), max_arc_angle(0.9*PI_), min_cell_quads(4), regular(false), symmetric(false),

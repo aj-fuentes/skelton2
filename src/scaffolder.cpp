@@ -402,6 +402,55 @@ void Scaffolder::compute_cells()
     }
 }
 
+std::vector<std::pair<int,int>> Scaffolder::math_cells(const std::vector<Point>& points1,
+    const std::vector<Point>& points2, const Vector& ev)
+{
+    int n = points1.size();
+
+    //verify equal number of points
+    if(n!=points2.size())
+        throw std::logic_error("Erro: Can't match cells, they don't have the same number of points");
+
+    if(n<3)
+        throw std::logic_error("Erro: Each cell must have at least three points");
+
+    //verify order of cells
+    const UnitVector ev_n = ev.normalized();
+    for(int j=1;j<n;j++)
+    {
+        if(points1[j].cross(points1[j-1]).dot(ev_n)<0)
+            throw std::logic_error("Error in cell order");
+        if(points2[j].cross(points2[j-1]).dot(ev_n)>0)
+            throw std::logic_error("Error in cell order");
+    }
+
+    int i = 0;
+    double best_dist = 0.0;
+    //compute first distance candidate
+    for(int j=0;j<n;j++)
+        best_dist += (points1[j]-points2[n-1-j]+ev).norm();
+
+    //find best distance
+    double dist = 0.0;
+    for(int k=1;k<n;k++)
+    {
+        dist = 0.0;
+        for(int j=0;j<n;j++)
+            dist += (points1[(j+k)%n]-points2[n-1-j]+ev).norm();
+        if(dist<best_dist)
+        {
+            best_dist = dist;
+            i = k;
+        }
+    }
+
+    std::vector<std::pair<int,int>> res(n);
+    for(int j=0;j<n;j++)
+        res[j] = {(j+i)%n,n-1-j};
+
+    return res;
+}
+
 void Scaffolder::compute_cells_match()
 {
     for(auto e : g->get_edges())
@@ -412,41 +461,7 @@ void Scaffolder::compute_cells_match()
         const auto ev_n = ((g->get_node(e.j)-g->get_node(e.i)).normalized());
         const auto ev = 5.0*ev_n;
 
-        int i = 0;
-        double best_dist = 0.0;
-        int n = points1.size();
-
-        //verify order of cells
-        for(int j=1;j<n;j++)
-        {
-            if(points1[j].cross(points1[j-1]).dot(ev_n)<0)
-                throw std::logic_error("Error in cell order");
-            if(points2[j].cross(points2[j-1]).dot(ev_n)>0)
-                throw std::logic_error("Error in cell order");
-        }
-
-        //compute first distance candidate
-        for(int j=0;j<n;j++)
-            best_dist += (points1[j]-points2[n-1-j]+ev).norm();
-
-        //find best distance
-        double dist = 0.0;
-        for(int k=1;k<n;k++)
-        {
-            dist = 0.0;
-            for(int j=0;j<n;j++)
-                dist += (points1[(j+k)%n]-points2[n-1-j]+ev).norm();
-            if(dist<best_dist)
-            {
-                best_dist = dist;
-                i = k;
-            }
-        }
-
-        std::vector<std::pair<int,int>> res;
-        for(int j=0;j<n;j++)
-            res.push_back({(j+i)%n,n-1-j});
-        cells_match[e] = res;
+        cells_match[e] = math_cells(points1,points2,ev);
     }
 }
 

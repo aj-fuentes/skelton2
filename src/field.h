@@ -11,11 +11,6 @@ typedef std::shared_ptr<SegmentField> SegmentField_ptr;
 
 typedef std::vector<double> FieldParams;
 
-extern "C"
-{
-    double integrand_function_wrapper(double,void*);
-}
-
 class Field
 {
 public:
