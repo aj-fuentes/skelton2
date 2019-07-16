@@ -1,5 +1,7 @@
 #include "mesher.h"
 
+// #define DEBUG_MESHER
+
 std::pair<const std::vector<Point>&,const std::vector<Point>&> Mesher::get_cells(const std::vector<int> idxs) const
 {
     const auto& i = idxs[0];
@@ -79,10 +81,14 @@ void Mesher::compute()
         {
             const auto& p = nodes[i];
             const Edge e = g->get_incident_edges(i)[0];
-            const UnitVector v = (nodes[e.i!=i? e.i : e.j]-p).normalized();
+            const UnitVector v = (p-nodes[e.i!=i? e.i : e.j]).normalized();
             const auto& cell = scaff_cells.at({i,e});
-            for(const auto& u : cell)
-                tips.push_back(compute_tip(p,u,v));
+
+            auto tip_meshlines = std::vector<Meshline>(cell.size());
+            for(int j=0;j<cell.size();j++)
+                tip_meshlines[j] = compute_tip(p,cell[j],v);
+
+            tips.push_back(tip_meshlines);
         }
     }
 }
@@ -145,6 +151,132 @@ std::vector<Point> Mesher::compute_tip(const Point& p, const UnitVector& u, cons
 void Mesher::save_to_file(const std::string& fname) const
 {
 
+    PointIndexer indexer;
+    std::vector<std::tuple<int,int,int,int>> quads;
+    std::vector<std::tuple<int,int,int>> tris;
 
+    #ifdef DEBUG_MESHER
+        std::cout << "num_quads " << num_quads << std::endl;
+        std::cout << "num_quads_tip " << num_quads_tip << std::endl;
+        std::cout << "Number of pieces " << pieces.size() << std::endl;
+        std::cout << "Number of meshline groups " << meshlines.size() << std::endl;
+        std::cout << "Saving piece meshes" << std::endl;
+    #endif
 
+    for(const auto& mls : meshlines)
+    {
+        const int n = mls.size();
+        #ifdef DEBUG_MESHER
+            std::cout << "Number meshline in this group " << n << std::endl;
+        #endif
+        for(int i=0;i<n;i++)
+        {
+            const auto& ml1 = mls[i];
+            const auto& ml2 = mls[(i+1)%n];
+
+            for(int j=0;j<num_quads;j++)
+            {
+                #ifdef DEBUG_MESHER
+                    std::cout << "Creating quad " << j << std::endl;
+                #endif
+
+                const auto& p0 = ml1[j];
+                const auto& p1 = ml1[j+1];
+                const auto& p2 = ml2[j+1];
+                const auto& p3 = ml2[j];
+
+                quads.push_back({
+                    indexer.index(p0),
+                    indexer.index(p1),
+                    indexer.index(p2),
+                    indexer.index(p3),
+                });
+            }
+        }
+    }
+
+    #ifdef DEBUG_MESHER
+        std::cout << "Saving tips " << std::endl;
+        std::cout << "Tips groups " << tips.size() << std::endl;
+    #endif
+
+    for(const auto& mls : tips)
+    {
+        const int n = mls.size();
+
+        #ifdef DEBUG_MESHER
+            std::cout << "Number meshline in this group " << n << std::endl;
+        #endif
+
+        for(int i=0;i<n;i++)
+        {
+            const auto& ml1 = mls[i];
+            const auto& ml2 = mls[(i+1)%n];
+
+            #ifdef DEBUG_MESHER
+                if(ml1.size()!=ml2.size())
+                    throw std::logic_error("Error: tip meshlines does not have same number of points");
+                if(ml1.size()!=num_quads_tip+1)
+                    throw std::logic_error("Error: bad number of points in tip " + std::to_string(ml1.size()) + ", there must be " + std::to_string(num_quads_tip+1));
+            #endif
+
+            for(int j=0;j<num_quads_tip-1;j++)
+            {
+                #ifdef DEBUG_MESHER
+                    std::cout << "Creating tip quad " << i << std::endl;
+                #endif
+                const auto& p0 = ml1[j];
+                const auto& p1 = ml1[j+1];
+                const auto& p2 = ml2[j+1];
+                const auto& p3 = ml2[j];
+
+                quads.push_back({
+                    indexer.index(p3),
+                    indexer.index(p2),
+                    indexer.index(p1),
+                    indexer.index(p0),
+                });
+            }
+
+            const auto& q0 = ml1[num_quads_tip-1];
+            const auto& q1 = ml1[num_quads_tip];
+            const auto& q2 = ml2[num_quads_tip-1];
+            tris.push_back({
+                indexer.index(q0),
+                indexer.index(q2),
+                indexer.index(q1)
+            });
+        }
+    }
+
+    //write everything to the file
+    std::ofstream fout(fname);
+    fout << std::fixed << std::setprecision(5);
+    //first the points
+    for(const auto& p : indexer.get_points())
+    {
+        fout << "v ";
+        fout << p(0) << " ";
+        fout << p(1) << " ";
+        fout << p(2) << std::endl;
+    }
+    //then the quads
+    for(const auto& q : quads) //if there are quads
+    {
+        fout << "f ";
+        fout << std::get<0>(q) + 1 << " ";
+        fout << std::get<1>(q) + 1 << " ";
+        fout << std::get<2>(q) + 1 << " ";
+        fout << std::get<3>(q) + 1 << std::endl;
+    }
+    //then triangles
+    for(const auto& t : tris)
+    {
+        fout << "f ";
+        fout << std::get<0>(t) + 1 << " ";
+        fout << std::get<1>(t) + 1 << " ";
+        fout << std::get<2>(t) + 1 << std::endl;
+    }
+
+    fout.close();
 }

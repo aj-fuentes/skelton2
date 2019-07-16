@@ -2,9 +2,8 @@
 
 #include "mesher.h"
 
-TEST_CASE("Mesher triangle")
+TEST_CASE("Mesher segment")
 {
-
     const Point p(0,0,0);
     const UnitVector v(1,0,0);
     const double l = 5;
@@ -21,7 +20,6 @@ TEST_CASE("Mesher triangle")
     g->add_edge(0,1);
 
     auto scaff = Scaffolder_ptr(new Scaffolder(g));
-    scaff->compute();
 
     auto field = Field_ptr(new SegmentField(seg,{1,1},{1,1},{1,1},{0,0}));
     PiecesParam pieces{{field,{0,1}}};
@@ -77,6 +75,41 @@ TEST_CASE("Mesher triangle")
         REQUIRE(points.size()==mesher->num_quads_tip+1);
         for(auto p : points)
             REQUIRE(field->eval(p)==Approx(0.1).margin(1e-8));
+    }
 
+    SECTION("Mesher save")
+    {
+        mesher->num_quads_tip = 8;
+        mesher->num_quads = 10;
+
+        scaff->compute();
+        mesher->compute();
+
+        mesher->save_to_file("segment_mesh.obj");
+    }
+
+    SECTION("Mesher save")
+    {
+        mesher->num_quads_tip = 1;
+        mesher->num_quads = 1;
+
+        scaff->compute();
+        mesher->compute();
+
+        mesher->save_to_file("segment_min_mesh.obj");
+    }
+
+    SECTION("Mesher save")
+    {
+        scaff->set_max_arc_angle(PI_/10);
+
+        mesher->num_quads_tip = 8;
+        // mesher->max_quad_len = 10;
+        mesher->num_quads = 10;
+
+        scaff->compute();
+        mesher->compute();
+
+        mesher->save_to_file("segment_good_mesh.obj");
     }
 }

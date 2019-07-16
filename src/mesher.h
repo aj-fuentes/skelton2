@@ -46,7 +46,7 @@ private:
     std::pair<const std::vector<Point>&,const std::vector<Point>&> get_cells(const std::vector<int> idxs) const;
 
     std::vector<std::vector<Meshline>> meshlines; //meshlines are associated to pieces
-    std::vector<Meshline> tips;
+    std::vector<std::vector<Meshline>> tips;
 
 };
 #endif

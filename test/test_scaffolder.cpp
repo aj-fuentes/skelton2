@@ -14,6 +14,24 @@ TEST_CASE("Scaffolder variable utilities","[scaffolder]")
     REQUIRE(res.second==Edge(32,21));
 }
 
+TEST_CASE("Scaffolder 2 points")
+{
+    auto g = Graph_ptr(new Graph());
+    g->add_node(Point(0,0,0));
+    g->add_node(Point(5,0,0));
+    g->add_edge(0,1);
+
+    Scaffolder s(g);
+
+    SECTION("Standard scaffold")
+    {
+        s.set_mip_lp_file("2-points_scaff.mod");
+        s.set_mip_sol_file("2-points_scaff.sol");
+        s.compute();
+        s.save_to_file("2-points_scaff.obj");
+    }
+}
+
 TEST_CASE("Scaffolder triangle")
 {
     auto g = Graph_ptr(new Graph());
