@@ -269,7 +269,91 @@ double SegmentField::integrand_derivative_function(double t, const Point& x, int
     return d * d * val * da;
 }
 
-// Point SegmentField::shoot_ray(const Point& p, const UnitVector& u, double lv) const
-// {
-//     return Field::shoot_ray(q,);
-// }
+double ArcField::integrand_function(double t, const Point& x) const
+{
+    double r = arc->r;
+    double l = arc->l;
+    double lt = l - t;
+
+    double st = sin(t/r);
+    double ct = cos(t/r);
+
+    const auto XC = x-arc->c;
+
+    double XCu = XC.dot(arc->u);
+    double XCv = XC.dot(arc->v);
+    double XCuv = XC.dot(arc->b);
+
+    double th = (this->th[0] * lt + this->th[1] * t)/l;
+    double _cos = cos(th);
+    double _sin = sin(th);
+
+    double XCT  = -XCu*st + XCv*ct; //(X-C).T no need to rotate this after
+    double XCN0 = -XCu*ct - XCv*st; //(X-C).N
+    double XCB0 = XCuv;             //(X-C).B
+
+    //rotate by angle th both N and B
+    double XCN =  XCN0 * _cos + XCB0 * _sin;
+    double XCB = -XCN0 * _sin + XCB0 * _cos;
+
+    double da = l / (a[0] * lt + a[1] * t);
+    double a = da * ( XCT         );
+    double b =  l * ( XCN + r*_cos) / (this->b[0] * lt + this->b[1] * t);
+    double c =  l * ( XCB - r*_sin) / (this->c[0] * lt + this->c[1] * t);
+    double d = 1.0e0 - (a * a + b * b + c * c);
+    if (d < 0.0e0) return 0.0e0;
+    else return d * d * d * da;
+}
+
+double ArcField::integrand_derivative_function(double t, const Point& x, int idx) const
+{
+    double r = arc->r;
+    double l = arc->l;
+    double lt = l - t;
+
+    double st = sin(t/r);
+    double ct = cos(t/r);
+
+    const auto XC = x-arc->c;
+
+    double XCu = XC.dot(arc->u);
+    double XCv = XC.dot(arc->v);
+    double XCuv = XC.dot(arc->b);
+
+    double th = (this->th[0]*lt + this->th[1]*t)/l;
+    double _cos = cos(th);
+    double _sin = sin(th);
+
+    double XCT  = -XCu*st + XCv*ct; //(X-C).T no need to rotate this after
+    double XCN0 = -XCu*ct - XCv*st; //(X-C).N
+    double XCB0 = XCuv;             //(X-C).B
+
+    //rotate by angle th both N and B
+    double XCN =  XCN0 * _cos + XCB0 * _sin;
+    double XCB = -XCN0 * _sin + XCB0 * _cos;
+
+    double XPN = XCN + r*_cos;
+    double XPB = XCB - r*_sin;
+
+    double da = l / (this->a[0] * lt + this->a[1] * t);
+    double db = l / (this->b[0] * lt + this->b[1] * t);
+    double dc = l / (this->c[0] * lt + this->c[1] * t);
+
+    double a = XCT * da;
+    double b = XPN * db;
+    double c = XPB * dc;
+
+    double d = 1.0e0 - (a * a + b * b + c * c);
+    if (d < 0.0e0) return 0.0e0;
+
+    double Ti     = - arc->u[idx]*st + arc->v[idx]*ct;
+    double Nderiv = - arc->u[idx]*ct - arc->v[idx]*st;
+
+    //rotate the frame by th
+    double Ni =  Nderiv * _cos + arc->b[idx] * _sin;;
+    double Bi = -Nderiv * _sin + arc->b[idx] * _cos;
+
+    double val = a * da * (Ti) + b * db * (Ni) + c * dc * (Bi);
+
+    return d * d * val * da;
+}

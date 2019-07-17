@@ -5,8 +5,10 @@
 
 class Skeleton;
 class Segment;
+class Arc;
 typedef std::shared_ptr<Skeleton> Skeleton_ptr;
 typedef std::shared_ptr<Segment> Segment_ptr;
+typedef std::shared_ptr<Arc> Arc_ptr;
 
 class Skeleton {
 public:
@@ -30,8 +32,6 @@ public:
         f << get_tangent(t), get_normal(t), get_binormal(t);
         return f;
     }
-    virtual ~Skeleton()
-    {}
 
     const double l;
 };
@@ -45,11 +45,31 @@ public:
     UnitVector get_normal(double) const;
     UnitVector get_binormal(double) const;
     double get_distance(const Point&) const;
-    ~Segment()
-    {}
+
 
     const Point p;
-    const UnitVector v,n,b;
+    const UnitVector v;
+    const UnitVector n;
+    const UnitVector b;
+};
+
+class Arc : public Skeleton
+{
+public:
+    Arc(const Point&, const UnitVector&, const UnitVector&, double, double);
+    Point get_point(double) const;
+    UnitVector get_tangent(double) const;
+    UnitVector get_normal(double) const;
+    UnitVector get_binormal(double) const;
+    double get_distance(const Point&) const;
+
+
+    const Point c;
+    const UnitVector u;
+    const UnitVector v;
+    const UnitVector b;
+    const double r;
+    const double phi;
 };
 
 #endif

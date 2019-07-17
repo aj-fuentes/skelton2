@@ -22,8 +22,6 @@ public:
     virtual Point shoot_ray(const Point&,const UnitVector&,double) const;
     virtual double integrand_function(double,const Point&) const = 0;
     virtual double integrand_derivative_function(double,const Point&,int) const = 0;
-    virtual ~Field()
-    {}
 
     static double get_omega_constant(double);
     static double get_eta_constant(double);
@@ -46,10 +44,19 @@ public:
     {}
     double integrand_function(double, const Point&) const;
     double integrand_derivative_function(double,const Point&,int) const;
-    ~SegmentField()
-    {}
 
     const Segment_ptr seg;
+};
+
+class ArcField : public Field
+{
+public:
+    ArcField(const Arc_ptr& skel, const FieldParams a, const FieldParams b, const FieldParams c, const FieldParams th) : Field(skel,a,b,c,th), arc(skel)
+    {}
+    double integrand_function(double, const Point&) const;
+    double integrand_derivative_function(double,const Point&,int) const;
+
+    const Arc_ptr arc;
 };
 
 #endif
