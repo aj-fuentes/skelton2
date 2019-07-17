@@ -62,7 +62,7 @@ public:
     UnitVector get_normal(double) const;
     UnitVector get_binormal(double) const;
     double get_distance(const Point&) const;
-
+    // std::vector<Point> tangential_polyline() const;
 
     const Point c;
     const UnitVector u;

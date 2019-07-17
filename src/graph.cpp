@@ -70,9 +70,7 @@ void Graph::read_from_file(const std::string& fname)
                 int idx;
                 std::vector<int> idxs;
                 while(lin >> idx)
-                {
                     idxs.push_back(idx-1);
-                }
                 for(int i=0;i<idxs.size()-1;i++)
                     add_edge(idxs[i],idxs[i+1]);
             }
@@ -86,26 +84,7 @@ void Graph::read_from_file(const std::string& fname)
 
 void Graph::check_graph()
 {
-    //check for superflous articulations
-    for(int i=0;i<nodes.size();i++)
-    {
-        if(is_articulation(i))
-        {
-            const Edge e1 = incident_edges[i][0];
-            const Edge e2 = incident_edges[i][1];
-            const auto u = nodes[e1.i]-nodes[e1.j];
-            const auto v = nodes[e2.i]-nodes[e2.j];
-            if(u.cross(v).norm()<TOL) //parallel edges
-            {
-                std::stringstream ss;
-                ss << "Error: superflous articulation" << std::endl;
-                ss << "The node " << i << " is an articulation with ";
-                ss << "parallel incident edges " << std::endl;
-                ss << e1 << " and " << e2;
-                throw std::domain_error(ss.str());
-            }
-        }
-    }
+
     //check for duplicated points
     PointIndexer indexer;
     for(int i=0;i<nodes.size();i++)

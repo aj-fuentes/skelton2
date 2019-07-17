@@ -32,6 +32,50 @@ TEST_CASE("Scaffolder 2 points")
     }
 }
 
+TEST_CASE("Scaffolder parallel articulation")
+{
+    auto g = Graph_ptr(new Graph());
+    g->add_node(Point(0,0,0));
+    g->add_node(Point(2.5,0,0));
+    g->add_node(Point(5,0,0));
+    g->add_edge(0,1);
+    g->add_edge(1,2);
+
+    Scaffolder s(g);
+
+    SECTION("Standard scaffold")
+    {
+        s.set_mip_lp_file("art_par_scaff.mod");
+        s.set_mip_sol_file("art_par_scaff.sol");
+        s.compute();
+        s.save_to_file("art_par_scaff.obj");
+    }
+}
+
+TEST_CASE("Scaffolder parallel articulation 2")
+{
+    auto g = Graph_ptr(new Graph());
+    g->add_node(Point(0,0,0));
+    g->add_node(Point(2.5,0,0));
+    g->add_node(Point(5,0,0));
+    g->add_node(Point(2.5,2.5,2.5));
+
+    g->add_edge(0,1);
+    g->add_edge(1,2);
+    g->add_edge(2,3);
+    g->add_edge(3,0);
+
+    Scaffolder s(g);
+
+    SECTION("Standard scaffold")
+    {
+        s.set_mip_lp_file("art_par2_scaff.mod");
+        s.set_mip_sol_file("art_par2_scaff.sol");
+        s.compute();
+        s.save_to_file("art_par2_scaff.obj");
+    }
+}
+
 TEST_CASE("Scaffolder triangle")
 {
     auto g = Graph_ptr(new Graph());

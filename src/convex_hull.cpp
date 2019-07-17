@@ -62,7 +62,12 @@ void ConvexHull::compute_planar() {
         if (nodes.size()==2)
         {
             //some adaptations for articulations
-            n = nodes[0].cross(nodes[1]).normalized();
+            n = nodes[0].cross(nodes[1]);
+            if(n.norm()<TOL)//we need to find another normal
+                n = Vector(1,0,0).cross(nodes[0]);
+                if(n.norm()<TOL)
+                    n = Vector(0,1,0).cross(nodes[0]);
+            n.normalize();
             faces.push_back({0,1});
             faces.push_back({0,1});
         }
@@ -328,7 +333,13 @@ EdgeDual ConvexHull::edge_dual(const Edge& e) const
     }
     else if (nodes.size()==2) //articulation
     {
-        const UnitVector v = (nodes[0]+nodes[1]).normalized();
+        Vector v0 = nodes[0]+nodes[1];
+        if(v0.norm()<TOL)
+            v0 = Vector(1,0,0).cross(u);
+            if(v0.norm()<TOL)
+                v0 = Vector(0,1,0).cross(u);
+
+        const UnitVector v = v0.normalized();
         return EdgeDual(u,v,2*PI_);
     }
     else if(planar)
