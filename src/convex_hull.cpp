@@ -91,7 +91,7 @@ void ConvexHull::compute_planar() {
         const UnitVector u = (nodes[0]-barycenter).normalized();
         UnitVector n = u.cross(nodes[1]-barycenter);
         if(n.norm()<TOL)
-            u.cross(nodes[2]-barycenter);
+            n = u.cross(nodes[2]-barycenter);
         n.normalize();
         const UnitVector v = n.cross(u).normalized();
 

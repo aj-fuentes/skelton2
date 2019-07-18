@@ -85,7 +85,7 @@ private:
     }
     int arc_min_subdiv(int i, const ConvexHullEdge& e)
     {
-        return std::max(int(chulls[i].edge_dual(e).phi/max_arc_angle),1);
+        return ((int)std::max(chulls[i].edge_dual(e).phi/max_arc_angle,0.0)) + 1;
     }
 
     const Graph_ptr g;

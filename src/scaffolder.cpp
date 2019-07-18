@@ -353,12 +353,29 @@ void Scaffolder::compute_cell(int i, int j)
         throw std::logic_error("Error: cell must have at least three points");
 
     //sort cell points
-    auto n = (g->get_node(g_e.j)-g->get_node(g_e.i)).normalized();
-    if(i==g_e.j)
-        n = -n;
+    // auto n = (g->get_node(g_e.j)-g->get_node(g_e.i)).normalized();
+    // if(i==g_e.j)
+    //     n = -n;
+    auto n = chulls[i].get_node(j);
 
-    if(points[0].cross(points[1]).dot(n)>0)
+    if((points[1] - points[1].dot(n)*n).cross(points[0] - points[0].dot(n)*n).dot(n)<0)
+    {
         std::reverse(points.begin(),points.end());
+    }
+    //verify order
+    for(int k=1;k<points.size();k++)
+    {
+        if((points[k] - points[k].dot(n)*n).cross(points[k-1] - points[k-1].dot(n)*n).dot(n)<0)
+        {
+            std::stringstream ss;
+            ss << "Error: cell have wrong order (i=" << i << ",e_i=" << g_e << std::endl;
+            ss << "Normal " << n.transpose() << std::endl;
+            ss << "Cell points " << std::endl;
+            for(auto p : points)
+                ss << p.transpose() << std::endl;
+            throw std::logic_error(ss.str());
+        }
+    }
 }
 
 void Scaffolder::compute_cells()
@@ -401,6 +418,8 @@ void Scaffolder::compute_cells()
 std::vector<std::pair<int,int>> Scaffolder::math_cells(const std::vector<Point>& points1,
     const std::vector<Point>& points2, const Vector ev)
 {
+    //ev is to compute the distances correctly
+
     int n = points1.size();
 
     //verify equal number of points
@@ -410,15 +429,15 @@ std::vector<std::pair<int,int>> Scaffolder::math_cells(const std::vector<Point>&
     if(n<3)
         throw std::logic_error("Erro: Each cell must have at least three points");
 
-    //verify order of cells
-    const UnitVector ev_n = ev.normalized();
-    for(int j=1;j<n;j++)
-    {
-        if(points1[j].cross(points1[j-1]).dot(ev_n)<0)
-            throw std::logic_error("Error in cell order");
-        if(points2[j].cross(points2[j-1]).dot(ev_n)>0)
-            throw std::logic_error("Error in cell order");
-    }
+
+    // const UnitVector ev_n = ev.normalized();
+    // for(int j=1;j<n;j++)
+    // {
+    //     if(points1[j].cross(points1[j-1]).dot(ev_n)<0)
+    //         throw std::logic_error("Error in cell order");
+    //     if(points2[j].cross(points2[j-1]).dot(ev_n)>0)
+    //         throw std::logic_error("Error in cell order");
+    // }
 
     int i = 0;
     double best_dist = 0.0;

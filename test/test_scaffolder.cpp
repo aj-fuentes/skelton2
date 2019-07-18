@@ -52,6 +52,50 @@ TEST_CASE("Scaffolder parallel articulation")
     }
 }
 
+TEST_CASE("Scaffolder 3 planar points joint")
+{
+    auto g = Graph_ptr(new Graph());
+    g->add_node(Point(0,0,0));
+    g->add_node(Point(5,0,0));
+    g->add_node(Point(-3, 3,0));
+    g->add_node(Point(-3,-3,0));
+    g->add_edge(0,1);
+    g->add_edge(0,2);
+    g->add_edge(0,3);
+
+    Scaffolder s(g);
+
+    SECTION("Standard scaffold")
+    {
+        s.compute();
+        s.save_to_file("3-planar_joint_scaff.obj");
+    }
+}
+
+TEST_CASE("Scaffolder 4 planar points joint")
+{
+    auto g = Graph_ptr(new Graph());
+    g->add_node(Point(0,0,0));
+    g->add_node(Point(3,4,0));
+    g->add_node(Point(4,3,0));
+    g->add_node(Point(-4,-3,0));
+    g->add_node(Point(-3,-4,0));
+    g->add_edge(0,1);
+    g->add_edge(0,2);
+    g->add_edge(0,3);
+    g->add_edge(0,4);
+
+    Scaffolder s(g);
+
+    SECTION("Standard scaffold")
+    {
+        s.set_mip_lp_file("4-planar_joint_scaff.mod");
+        s.set_mip_sol_file("4-planar_joint_scaff.sol");
+        s.compute();
+        s.save_to_file("4-planar_joint_scaff.obj");
+    }
+}
+
 TEST_CASE("Scaffolder parallel articulation 2")
 {
     auto g = Graph_ptr(new Graph());
@@ -416,4 +460,58 @@ TEST_CASE("Scaffolder 5-joint")
         s.compute();
         s.save_to_file("5-joint_arc_reg_scaff.obj");
     }
+}
+
+TEST_CASE("Scaffolder 6ring")
+{
+    auto g = Graph_ptr(new Graph());
+    g->read_from_file("../test/obj_files/6ring.obj");
+
+    Scaffolder s(g);
+
+    s.compute();
+    s.save_to_file("6ring_scaff.obj");
+}
+
+
+TEST_CASE("Scaffolder part 6ring")
+{
+    auto g = Graph_ptr(new Graph());
+    g->read_from_file("../test/obj_files/part_6ring.obj");
+
+    Scaffolder s(g);
+
+    s.compute();
+    s.save_to_file("part_6ring_scaff.obj");
+}
+
+TEST_CASE("Scaffolder part hex toru")
+{
+    auto g = Graph_ptr(new Graph());
+    g->read_from_file("../test/obj_files/hexagonal_torus.obj");
+
+    Scaffolder s(g);
+
+    s.compute();
+    s.save_to_file("hex_torus_scaff.obj");
+}
+
+TEST_CASE("Scaffolder 4-joint planar")
+{
+    Graph_ptr g(new Graph());
+    g->add_node(Point(0,0,0));
+    g->add_node(Point(3,4,0));
+    g->add_node(Point(3,-4,0));
+    g->add_node(Point(3,0,4));
+    g->add_node(Point(3,0,-4));
+
+    g->add_edge(0,1);
+    g->add_edge(0,2);
+    g->add_edge(0,3);
+    g->add_edge(0,4);
+
+    Scaffolder s(g);
+
+    s.compute();
+    s.save_to_file("4-joint_planar_scaff.obj");
 }

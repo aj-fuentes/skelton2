@@ -56,13 +56,13 @@ TEST_CASE("ConvexHull of triangle","[convex_hull]")
     REQUIRE(chull.is_planar());
 
     auto edges = chull.get_incident_edges(0);
-    REQUIRE(edges==std::vector<Edge>{Edge(0,1),Edge(0,2)});
+    REQUIRE(edges==std::vector<Edge>{Edge(0,2),Edge(0,1)});
 
     edges = chull.get_incident_edges(1);
     REQUIRE(edges==std::vector<Edge>{Edge(0,1),Edge(1,2)});
 
     edges = chull.get_incident_edges(2);
-    REQUIRE(edges==std::vector<Edge>{Edge(1,2),Edge(0,2)});
+    REQUIRE(edges==std::vector<Edge>{Edge(0,2),Edge(1,2)});
 
     auto edual = chull.edge_dual(Edge(0,1));
     REQUIRE(edual.u==UnitVector(0,0,1));
@@ -125,13 +125,13 @@ TEST_CASE("ConvexHull 3 nodes")
     REQUIRE(chull.is_planar());
 
     auto edges = chull.get_incident_edges(0);
-    REQUIRE(edges==std::vector<Edge>{Edge(0,1),Edge(0,2)});
+    REQUIRE(edges==std::vector<Edge>{Edge(0,2),Edge(0,1)});
 
     edges = chull.get_incident_edges(1);
     REQUIRE(edges==std::vector<Edge>{Edge(0,1),Edge(1,2)});
 
     edges = chull.get_incident_edges(2);
-    REQUIRE(edges==std::vector<Edge>{Edge(1,2),Edge(0,2)});
+    REQUIRE(edges==std::vector<Edge>{Edge(0,2),Edge(1,2)});
 
     auto edual = chull.edge_dual(Edge(0,1));
     const auto n = UnitVector(1,1,1).normalized();
