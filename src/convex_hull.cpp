@@ -89,23 +89,40 @@ void ConvexHull::compute_planar() {
     else
     {
         const UnitVector u = (nodes[0]-barycenter).normalized();
-        const UnitVector n = u.cross(nodes[1]-barycenter).normalized();
+        UnitVector n = u.cross(nodes[1]-barycenter);
+        if(n.norm()<TOL)
+            u.cross(nodes[2]-barycenter);
+        n.normalize();
         const UnitVector v = n.cross(u).normalized();
 
+        #ifdef DEBUG_CONVEX_HULL
+            std::cout << "Planar barycenter " << barycenter.transpose() << std::endl;
+            std::cout << "n=[" << n.transpose() << "]" << std::endl;
+            std::cout << "u=[" << u.transpose() << "] v=[" << v.transpose() << "]" << std::endl;
+        #endif
+
+
+        //sor indices of points according to agngle around plane
         std::vector<std::pair<double,int>> angles_idx;
         for(int i=0; i<nodes.size();++i)
         {
-            auto p = nodes[i];
+            const auto& p = nodes[i];
             angles_idx.push_back({std::atan2(v.dot(p-barycenter),u.dot(p-barycenter)),i});
         }
         std::sort(angles_idx.begin(),angles_idx.end());
 
+        //create faces, both are the same but with different orientations
         Face face0(nodes.size());
         Face face1(nodes.size());
-        for(int i=0; i<nodes.size(); ++i) {
+        for(int i=0;i<nodes.size();i++)
+        {
             face0[i] = angles_idx[i].second;
             face1[nodes.size()-i-1] = angles_idx[i].second;
-            auto j = (i+1)%nodes.size();
+        }
+        for(int k=0;k<face0.size();k++)
+        {
+            const int i = face0[k];
+            const int j = face0[(k+1)%face0.size()];
             Edge e(i,j);
             add_edge(e.i,e.j);
             edge_faces[e].insert(0);
@@ -117,6 +134,19 @@ void ConvexHull::compute_planar() {
 
         faces.push_back(face1);
         normals.push_back(-n);
+
+        #ifdef DEBUG_CONVEX_HULL
+            //verify face order
+            for(int k=1;k<face0.size();k++)
+            {
+                const auto d0 = (nodes[face0[k-1]]-barycenter).cross(nodes[face0[k]]-barycenter).dot(n);
+                const auto d1 = (nodes[face1[k-1]]-barycenter).cross(nodes[face1[k]]-barycenter).dot(-n);
+                if(d0<TOL or d1<TOL)
+                {
+                    throw std::logic_error("Faces in planar convex hull have wrong order");
+                }
+            }
+        #endif
     }
 
     sort_incident_edges();
@@ -346,6 +376,13 @@ EdgeDual ConvexHull::edge_dual(const Edge& e) const
     {
         const Vector outward_vector = (0.5*(nodes[e.j]+nodes[e.i])-barycenter).normalized();
         UnitVector v = u.cross(nodes[e.j]-nodes[e.i]).normalized();
+        #ifdef DEBUG_CONVEX_HULL
+            std::cout << "Computing planar edge dual" << std::endl;
+            std::cout << "Edge=" << e << " " << std::endl;
+            std::cout << "nodes[e.i]=" << nodes[e.i].transpose() << std::endl;
+            std::cout << "nodes[e.j]=" << nodes[e.j].transpose() << std::endl;
+            std::cout << "u=[" << u.transpose() << "] v=[" << v.transpose() << "]" << std::endl;
+        #endif
         if(outward_vector.dot(v)<0)
             v = -v;
         return EdgeDual(u,v,PI_);
