@@ -62,7 +62,10 @@ public:
     UnitVector get_normal(double) const;
     UnitVector get_binormal(double) const;
     double get_distance(const Point&) const;
-    // std::vector<Point> tangential_polyline() const;
+    std::vector<Point> tangential_polyline() const;
+
+    static std::pair<Arc_ptr,Arc_ptr> build_biarc(const Point&, const UnitVector&, const Point&, const UnitVector&);
+    static Arc_ptr build_arc_from_points(const Point&, const Point&, const Point&);
 
     const Point c;
     const UnitVector u;

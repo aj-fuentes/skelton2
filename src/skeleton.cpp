@@ -121,3 +121,53 @@ double Arc::get_distance(const Point& x) const
     return d0;
 }
 
+std::vector<Point> Arc::tangential_polyline() const
+{
+    return {
+        get_start_point(),
+        c + r*u + r*tan(phi/4)*v,
+        c + r*u + r*tan(3*phi/4)*v,
+        get_end_point()
+    };
+}
+
+std::pair<Arc_ptr,Arc_ptr> Arc::build_biarc(const Point& a0, const UnitVector& u0, const Point& a1, const UnitVector& u1)
+{
+    const double a = (u0+u1).dot(u0+u1) - 4;//a = np.dot(t0+t1,t0+t1)-4.0
+    const double b = 2*(u0+u1).dot(a0-a1);//b = 2.0*np.dot(t0+t1,A0-A1)
+    const double c = (a0-a1).dot(a0-a1);//c = np.dot(A0-A1,A0-A1)
+
+    //take positive root of discriminant
+    double l = (-b + sqrt(b*b-4.0*a*c))/(2.0*a);
+    if(l<0.0)
+        l = (-b - sqrt(b*b-4.0*a*c))/(2.0*a);
+
+    const auto L = a0 + l*u0;//L = A0+l*t0
+    const auto N = a1 - l*u1;//N = A1-l*t1
+    const auto M = (L+N)/2;//M = 0.5*(L+N)
+
+    // a1 = get_arc_from_points(A0,L,M)
+    // a2 = get_arc_from_points(M,N,A1)
+    return std::pair<Arc_ptr,Arc_ptr>(build_arc_from_points(a0,L,M),build_arc_from_points(M,N,a1));
+}
+
+Arc_ptr Arc::build_arc_from_points(const Point& a, const Point& b, const Point& c)
+{
+    if(abs((a-b).norm()-(c-b).norm())>TOL)
+    {
+        std::logic_error("Error: cannot construct arc, distances from points to middle are not equal");
+    }
+    const UnitVector u0 = (a-b).normalized();
+    const Vector w = c-b;
+    const UnitVector v0 = u0.cross(w).cross(u0).normalized();
+    const double th = atan2(w.dot(v0),w.dot(u0));
+    const double x = (a-b).norm()/cos(th/2);
+
+    const auto center = ((a+c)/2-b).normalized()*x + b;
+    const double phi = PI_-th;
+    const double r = (a-center).norm();
+    const auto u = -u0;
+    const auto v = -v0;
+
+    return Arc_ptr(new Arc(center,u,v,r,phi));
+}
