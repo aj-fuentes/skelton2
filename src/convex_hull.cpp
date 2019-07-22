@@ -64,9 +64,13 @@ void ConvexHull::compute_planar() {
             //some adaptations for articulations
             n = nodes[0].cross(nodes[1]);
             if(n.norm()<TOL)//we need to find another normal
+            {
                 n = Vector(1,0,0).cross(nodes[0]);
                 if(n.norm()<TOL)
+                {
                     n = Vector(0,1,0).cross(nodes[0]);
+                }
+            }
             n.normalize();
             faces.push_back({0,1});
             faces.push_back({0,1});
@@ -101,8 +105,7 @@ void ConvexHull::compute_planar() {
             std::cout << "u=[" << u.transpose() << "] v=[" << v.transpose() << "]" << std::endl;
         #endif
 
-
-        //sor indices of points according to agngle around plane
+        //sort indices of points according to agngle around plane
         std::vector<std::pair<double,int>> angles_idx;
         for(int i=0; i<nodes.size();++i)
         {
@@ -365,9 +368,13 @@ EdgeDual ConvexHull::edge_dual(const Edge& e) const
     {
         Vector v0 = nodes[0]+nodes[1];
         if(v0.norm()<TOL)
+        {
             v0 = Vector(1,0,0).cross(u);
             if(v0.norm()<TOL)
+            {
                 v0 = Vector(0,1,0).cross(u);
+            }
+        }
 
         const UnitVector v = v0.normalized();
         return EdgeDual(u,v,2*PI_);

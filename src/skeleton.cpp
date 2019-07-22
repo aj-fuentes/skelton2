@@ -53,7 +53,7 @@ double Segment::get_distance(const Point& x) const
 }
 
 Arc::Arc(const Point& c, const UnitVector& u, const UnitVector& v, double r, double phi) :
-    Skeleton(phi*r), c(c), v(v), b(u.cross(v).normalized()), r(r), phi(phi)
+    Skeleton(phi*r), c(c), u(u), v(v), b(u.cross(v).normalized()), r(r), phi(phi)
 {
     if(abs(u.norm()-1)>TOL)
     {
@@ -123,10 +123,11 @@ double Arc::get_distance(const Point& x) const
 
 std::vector<Point> Arc::tangential_polyline() const
 {
+    const double d = r/cos(phi/4);
     return {
         get_start_point(),
-        c + r*u + r*tan(phi/4)*v,
-        c + r*u + r*tan(3*phi/4)*v,
+        c +   d*cos(phi/4)*u +   d*sin(phi/4)*v,
+        c + d*cos(3*phi/4)*u + d*sin(3*phi/4)*v,
         get_end_point()
     };
 }

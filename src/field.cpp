@@ -114,7 +114,7 @@ double Field::eval(const Point& x) const
     gsl_integration_workspace * ws = gsl_integration_workspace_alloc(gsl_ws_size);
 
     //integrate
-    int res = gsl_integration_qag (&F, 0.0e0, skel->l, max_err, max_err, gsl_ws_size, GSL_INTEG_GAUSS61, ws, &val, &err);
+    gsl_integration_qag (&F, 0.0e0, skel->l, max_err, max_err, gsl_ws_size, GSL_INTEG_GAUSS61, ws, &val, &err);
 
     gsl_integration_workspace_free(ws);
 
@@ -140,7 +140,7 @@ Vector Field::gradient_eval(const Point& x) const
         extra.idx = i;
         ws = gsl_integration_workspace_alloc(gsl_ws_size);
         //integrate
-        int res = gsl_integration_qag(&F, 0.0e0, skel->l, max_err, max_err, gsl_ws_size, GSL_INTEG_GAUSS61, ws, &val, &err);
+        gsl_integration_qag(&F, 0.0e0, skel->l, max_err, max_err, gsl_ws_size, GSL_INTEG_GAUSS61, ws, &val, &err);
         gsl_integration_workspace_free(ws);
         grad(i) = -6.0e0*val*2.1875e0;
     }

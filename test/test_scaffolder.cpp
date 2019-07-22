@@ -1,6 +1,7 @@
 #include "catch.hpp"
 
 #include "scaffolder.h"
+#include "skeleton.h"
 
 TEST_CASE("Scaffolder variable utilities","[scaffolder]")
 {
@@ -10,8 +11,8 @@ TEST_CASE("Scaffolder variable utilities","[scaffolder]")
     REQUIRE(res.first==101);
     REQUIRE(res.second==Edge(32,21));
     auto res2 = Scaffolder::parse_cell_sum_variable("x_101_21_32");
-    REQUIRE(res.first==101);
-    REQUIRE(res.second==Edge(32,21));
+    REQUIRE(res2.first==101);
+    REQUIRE(res2.second==Edge(32,21));
 }
 
 TEST_CASE("Scaffolder 2 points")
@@ -514,4 +515,37 @@ TEST_CASE("Scaffolder 4-joint planar")
 
     s.compute();
     s.save_to_file("4-joint_planar_scaff.obj");
+}
+
+TEST_CASE("Arc polyline","[scaffolder]")
+{
+    // const Point c(3,2,0);
+    // const UnitVector u = Vector(1,1,0).normalized();
+    // const UnitVector v = u.cross(Vector(-1,2,0)).normalized();
+    // const double r = 5;
+    // const double phi = PI_/3;
+
+    const Point c(0,0,0);
+    const UnitVector u = Vector(1,0,0).normalized();
+    const UnitVector v = Vector(0,1,0).normalized();
+    const double r = 5;
+    const double phi = PI_/3;
+
+    const auto arc = Arc_ptr(new Arc(c,u,v,r,phi));
+
+    Graph_ptr g(new Graph());
+    for(const auto& p : arc->tangential_polyline())
+    {
+        g->add_node(p);
+        std::cout<<p.transpose() << std::endl;
+    }
+
+    g->add_edge(0,1);
+    g->add_edge(1,2);
+    g->add_edge(2,3);
+
+    Scaffolder s(g);
+
+    s.compute();
+    s.save_to_file("arc_polyline_scaff.obj");
 }

@@ -15,9 +15,6 @@ std::pair<const std::vector<Point>&,const std::vector<Point>&> Mesher::get_cells
 
 void Mesher::compute_cells_match()
 {
-    const auto& g = scaff->g;
-    const auto& cells = scaff->cells;
-
     for(const auto& piece : pieces)
     {
         const auto& field = piece.first;

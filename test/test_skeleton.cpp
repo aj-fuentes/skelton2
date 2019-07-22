@@ -73,3 +73,35 @@ TEST_CASE("Segment","[skeleton]")
         REQUIRE(seg->get_distance(Point( 4.0, 0.0, 2.0))==Approx(2.0));
     }
 }
+
+TEST_CASE("Arc","[skeleton]")
+{
+    // const Point c(3,2,0);
+    // const UnitVector u = Vector(1,1,0).normalized();
+    // const UnitVector v = u.cross(Vector(-1,2,0)).normalized();
+    // const double r = 5;
+    // const double phi = PI_/3;
+
+    const Point c(2,0,0);
+    const UnitVector u = Vector(1,0,0).normalized();
+    const UnitVector v = u.cross(Vector(0,1,0)).normalized();
+    const double r = 5;
+    const double phi = PI_/3;
+
+    const auto arc = Arc_ptr(new Arc(c,u,v,r,phi));
+
+    SECTION("Get points")
+    {
+        int n = 10;
+        for(int i=0;i<=n;i++)
+        {
+            const double t = i*arc->l/n;
+            const auto& p =  arc->get_point(t);
+
+            REQUIRE((p-c).norm()==Approx(r).margin(TOL));
+            REQUIRE((p-c).dot(arc->b)==Approx(0).margin(TOL));
+            REQUIRE(atan2(arc->v.dot(p-c),arc->u.dot(p-c))==Approx(t/r).margin(TOL));
+            REQUIRE((p-c).dot(arc->get_tangent(t))==Approx(0).margin(TOL));
+        }
+    }
+}
