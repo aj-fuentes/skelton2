@@ -537,7 +537,6 @@ TEST_CASE("Arc polyline","[scaffolder]")
     for(const auto& p : arc->tangential_polyline())
     {
         g->add_node(p);
-        std::cout<<p.transpose() << std::endl;
     }
 
     g->add_edge(0,1);

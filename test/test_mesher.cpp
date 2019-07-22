@@ -198,3 +198,41 @@ TEST_CASE("Mesher arc")
         mesher->save_to_file("arc_long_quad_mesh.obj");
     }
 }
+
+TEST_CASE("6-ring mesh","[mesher]")
+{
+    auto g = Graph_ptr(new Graph());
+    g->read_from_file("../test/obj_files/6ring.obj");
+
+    auto scaff = Scaffolder_ptr(new Scaffolder(g));
+
+    PiecesParam pieces;
+    std::vector<Field_ptr> fields;
+    for(const auto& e : g->get_edges())
+    {
+        const auto p = g->get_node(e.i);
+        const auto w = g->get_node(e.j)-g->get_node(e.i);
+        const auto v = w.normalized();
+        const auto l = w.norm();
+        const auto n = v.cross(Vector(1,0,0)).normalized();
+        auto seg = Segment_ptr(new Segment(p,v,l,n));
+        auto field = Field_ptr(new SegmentField(seg,{1,1},{1,1},{1,1},{0,0}));
+
+        fields.push_back(field);
+        pieces.emplace_back(field,std::vector<int>{e.i,e.j});
+    }
+    auto field = MultiField_ptr(new MultiField(fields));
+
+    auto mesher = Mesher_ptr(new Mesher(scaff,field,pieces,0.1));
+
+
+    scaff->set_max_arc_angle(PI_/10);
+
+    mesher->num_quads_tip = 8;
+    mesher->max_quad_len = 0.2;
+
+    scaff->compute();
+    mesher->compute();
+
+    mesher->save_to_file("6-ring_mesh.obj");
+}

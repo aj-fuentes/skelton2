@@ -15,7 +15,7 @@ class Mesher
 {
 public:
     Mesher(const Scaffolder_ptr& scaff, const Field_ptr& field, const PiecesParam& pieces, double lv) :
-        max_quad_len(0.0), num_quads(1), num_quads_tip(1), scaff(scaff), field(field),
+        max_quad_len(0.0), num_quads(1), num_quads_tip(1), scaff(scaff), global_field(field),
         pieces(pieces), lv(lv)
     {}
     Meshline compute_meshline(const Field_ptr&, const Point&, const UnitVector&, const Point&, const UnitVector&);
@@ -30,7 +30,7 @@ public:
 
 private:
     Scaffolder_ptr scaff;
-    const Field_ptr field;
+    const Field_ptr global_field;
     PiecesParam pieces;
     double lv;
 

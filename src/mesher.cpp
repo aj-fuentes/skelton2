@@ -124,7 +124,7 @@ Meshline Mesher::compute_meshline(const Field_ptr& field, const Point& p, const 
 
         const Point pq = field->skel->get_point(t);
 
-        points[i] = this->field->shoot_ray(pq,w,lv);
+        points[i] = this->global_field->shoot_ray(pq,w,lv);
     }
 
     return points;
@@ -139,7 +139,7 @@ std::vector<Point> Mesher::compute_tip(const Point& p, const UnitVector& u, cons
     for(int i=0;i<=n;i++)
     {
         const UnitVector w = (((n-i)*u + i*v)/n).normalized();
-        points[i] = this->field->shoot_ray(p,w,lv);
+        points[i] = this->global_field->shoot_ray(p,w,lv);
     }
 
     return points;

@@ -152,7 +152,7 @@ Point Field::shoot_ray(const Point& p,const UnitVector& u,double lv) const
 {
 
     double x_lo = 0.0;
-    double x_hi = std::max(std::max(b[0],b[1]),std::max(c[0],c[1]))*get_eta_constant(lv);
+    double x_hi = max_radius(lv);
     auto positive = [&](double t){ return eval(p+t*u)>lv;};
 
     if(not positive(x_lo))
@@ -356,4 +356,37 @@ double ArcField::integrand_derivative_function(double t, const Point& x, int idx
     double val = a * da * (Ti) + b * db * (Ni) + c * dc * (Bi);
 
     return d * d * val * da;
+}
+
+double MultiField::integrand_function(double t, const Point& x) const
+{
+    double res = 0.0;
+    for(const auto& field : fields)
+        res += field->integrand_function(t,x);
+    return res;
+}
+
+double MultiField::integrand_derivative_function(double t,const Point& x,int idx) const
+{
+    double res = 0.0;
+    for(const auto& field : fields)
+        res += field->integrand_derivative_function(t,x,idx);
+    return res;
+}
+
+double MultiField::max_radius(double lv) const
+{
+    double max_b = std::max(fields[0]->b[0],fields[0]->b[1]);
+    double max_c = std::max(fields[0]->c[0],fields[0]->c[1]);
+    // double max_a = std::max(fields[0]->a[0],fields[0]->a[1]);
+    for(int i=1;i<fields.size();i++)
+    {
+        max_b = std::max(max_b ,std::max(fields[i]->b[0],fields[i]->b[1]));
+        max_c = std::max(max_c ,std::max(fields[i]->c[0],fields[i]->c[1]));
+        // max_a = std::max(max_a ,std::max(fields[i]->a[0],fields[i]->a[1]));
+    }
+    double max_bc = std::max(max_b,max_c)*get_eta_constant(lv);
+    // max_a *= get_omega_constant(lv);
+    // return std::max(max_bc,max_a);
+    return max_bc;
 }

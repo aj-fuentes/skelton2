@@ -82,6 +82,5 @@ TEST_CASE("Graph test read from file","[graph]")
     REQUIRE(g.get_nodes()==points);
     REQUIRE(g.get_edges()==edges);
 
-    // remove("__test_graph_file__.obj");
-
+    remove(fname.c_str());
 }
