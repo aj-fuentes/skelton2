@@ -113,7 +113,7 @@ Meshline Mesher::compute_meshline(const Field_ptr& field, const Point& p, const 
     const double l = field->skel->l;
     for(int i=0;i<=n;i++)
     {
-        const double t = i*l/n;
+        const double t = ((double)i)*l/((double)n);
         const UnitVector wt = ((l-t)*w0 + t*w1).normalized();
         const double th = ((l-t)*field->th[0] + t*field->th[1])/l;
         const double cth = cos(th);
@@ -125,7 +125,7 @@ Meshline Mesher::compute_meshline(const Field_ptr& field, const Point& p, const 
              0,sth, cth;
         const UnitVector w = F*R*wt;
 
-        const Point pq = ((l-t)*p + t*q)/l;
+        const Point pq = field->skel->get_point(t);
 
         points[i] = this->field->shoot_ray(pq,w,lv);
     }
