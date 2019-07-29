@@ -151,6 +151,41 @@ Vector Field::gradient_eval(const Point& x) const
 Point Field::shoot_ray(const Point& p,const UnitVector& u,double lv) const
 {
 
+    //setup root finding with GSL
+    gsl_function F;
+    F.function = &ray_shooting_wrapper;
+    struct params extra(p,this,lv,u);
+    F.params = &extra;
+
+    auto find_root = [&F](double x_lo, double x_hi) -> double {
+        gsl_root_fsolver *s = gsl_root_fsolver_alloc(gsl_root_fsolver_brent);
+        gsl_root_fsolver_set(s, &F, x_lo, x_hi);
+
+        //find root with GSL
+        int status;
+        double root;
+        int iter = 0;
+        int max_iter = 100;
+        do
+        {
+            iter++;
+            status = gsl_root_fsolver_iterate(s);
+            root = gsl_root_fsolver_root(s);
+            x_lo = gsl_root_fsolver_x_lower(s);
+            x_hi = gsl_root_fsolver_x_upper(s);
+            status = gsl_root_test_interval(x_lo, x_hi, 1.0e-8, 0.0);
+        }
+        while(status == GSL_CONTINUE && iter < max_iter);
+        gsl_root_fsolver_free(s);
+
+        if(status != GSL_SUCCESS)
+        {
+            throw std::logic_error("Error: could not find intersection point with the shooting ray");
+        }
+
+        return root;
+    };
+
     double x_lo = 0.0;
     double x_hi = max_radius(lv);
     auto positive = [&](double t){ return eval(p+t*u)>lv;};
@@ -170,35 +205,36 @@ Point Field::shoot_ray(const Point& p,const UnitVector& u,double lv) const
         }
     }
 
-    //setup root finding with GSL
-    gsl_function F;
-    F.function = &ray_shooting_wrapper;
-    struct params extra(p,this,lv,u);
-    F.params = &extra;
-
-    gsl_root_fsolver *s = gsl_root_fsolver_alloc(gsl_root_fsolver_brent);
-    gsl_root_fsolver_set(s, &F, x_lo, x_hi);
-
-    //find root with GSL
-    int status;
-    double root;
-    int iter = 0;
-    max_iter = 100;
-    do
+    double root = find_root(x_lo,x_hi);
+    bool refine_root = true;
+    const int N = 10;
+    while(refine_root)
     {
-        iter++;
-        status = gsl_root_fsolver_iterate(s);
-        root = gsl_root_fsolver_root(s);
-        x_lo = gsl_root_fsolver_x_lower(s);
-        x_hi = gsl_root_fsolver_x_upper(s);
-        status = gsl_root_test_interval(x_lo, x_hi, 1.0e-8, 0.0);
-    }
-    while(status == GSL_CONTINUE && iter < max_iter);
-    gsl_root_fsolver_free(s);
+        refine_root = false;
 
-    if(status != GSL_SUCCESS)
-    {
-        throw std::logic_error("Error: could not find intersection point with the shooting ray");
+        //first do a sampling along the ray (10 elements)
+        int k = 1;
+        while(k<N)
+        {
+            x_hi = x_lo + k*(root-x_lo)/N;
+            if(positive(x_hi))
+            {
+                k++;
+            }
+            else
+            {
+                refine_root = true;
+                root = find_root(x_lo,x_hi);
+                break;
+            }
+        }
+        //if no new interval found, check if by moving a little bit away of the root we get a new interval
+        //this works only in the case where the ray is intersecting the wrong piece from the outside
+        if((not refine_root) and (not positive(root-TOL)))
+        {
+            refine_root = true;
+            root = find_root(x_lo,root-TOL);
+        }
     }
 
     return p+root*u;
