@@ -102,14 +102,16 @@ void Mesher::compute()
 
     meshlines = std::vector<std::vector<Meshline>>(pieces.size());
 
-    const unsigned int n = std::thread::hardware_concurrency();
+    unsigned int n = std::thread::hardware_concurrency();
+    if(n==0) n=1; //in case hardware_concurrency() fails to detect the right value
+
     #ifdef DEBUG_MESHER_THREADS
         std::cout << "Creating " << n << " meshline computing threads" << std::endl;
     #endif
 
     std::vector<std::thread> threads(n);
     for(int k=0;k<n;k++)
-        threads.at(k) = std::thread([k,&n,&nodes,this](){
+        threads[k] = std::thread([k,&n,&nodes,this](){
             for(int i=k;i<pieces.size();i+=n)
             {
                 const auto& piece = pieces[i];
@@ -135,7 +137,7 @@ void Mesher::compute()
         std::cout << "Joining threads" << std::endl;
     #endif
 
-    for(auto& thread :  threads)
+    for(auto& thread : threads)
         thread.join();
 
     #ifdef DEBUG_MESHER_THREADS
