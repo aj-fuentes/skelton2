@@ -50,7 +50,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 include(GenerateExportHeader)
 
 if(UNIX)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-sign-compare -std=c++14")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-sign-compare -std=c++14 -pthread")
 endif(UNIX)
 
 set(CMAKE_CXX_STANDARD 14)

@@ -23,8 +23,8 @@ public:
     Field(const Skeleton_ptr& skel, const FieldParams& a, const FieldParams& b, const FieldParams& c, const FieldParams& th) :
         skel(skel), a(a), b(b), c(c), th(th), max_err(1.0e-8), gsl_ws_size(100)
     {}
-    double eval(const Point&) const;
-    Vector gradient_eval(const Point&) const;
+    virtual double eval(const Point&) const;
+    virtual Vector gradient_eval(const Point&) const;
     virtual Point shoot_ray(const Point&,const UnitVector&,double) const;
     virtual double integrand_function(double,const Point&) const = 0;
     virtual double integrand_derivative_function(double,const Point&,int) const = 0;
@@ -45,10 +45,10 @@ protected:
 
     virtual double max_radius(double lv) const
     {
-        const double max_bc = std::max(std::max(b[0],b[1]),std::max(c[0],c[1]))*get_eta_constant(lv);
-        // const double max_a = std::max(a[0],a[1])*get_omega_constant(lv);
-        // return std::max(max_bc,max_a);
-        return max_bc;
+        double max_bc = std::max(std::max(b[0],b[1]),std::max(c[0],c[1]))*get_eta_constant(lv);
+        double max_a = std::max(a[0],a[1])*get_omega_constant(lv);
+        return std::max(max_bc,max_a);
+        // return max_bc;
     }
 
     //base constructor for MultiField
@@ -84,8 +84,16 @@ public:
     MultiField(const std::vector<Field_ptr>& fields) :
         Field(), fields(fields)
     {}
-    double integrand_function(double, const Point&) const;
-    double integrand_derivative_function(double,const Point&,int) const;
+    double eval(const Point&) const override;
+    Vector gradient_eval(const Point&) const override;
+    double integrand_function(double, const Point&) const override
+    {
+        return 0.0;
+    }
+    double integrand_derivative_function(double,const Point&,int) const override
+    {
+        return 0.0;
+    }
     double max_radius(double) const;
 
 private:

@@ -1,6 +1,9 @@
 #include "mesher.h"
 
+#include <thread>
+
 // #define DEBUG_MESHER
+// #define DEBUG_MESHER_THREADS
 
 std::pair<const std::vector<Point>&,const std::vector<Point>&> Mesher::get_cells(const std::vector<int> idxs) const
 {
@@ -42,6 +45,54 @@ void Mesher::compute_cells_match()
     }
 }
 
+// void Mesher::compute()
+// {
+//     compute_cells_match();
+
+//     const auto& g = scaff->g;
+//     const auto& nodes = g->get_nodes();
+
+//     meshlines = std::vector<std::vector<Meshline>>(pieces.size());
+
+//     for(int i=0;i<pieces.size();i++)
+//     {
+//         const auto& piece = pieces[i];
+
+//         const auto& field = piece.first;
+//         const auto& idxs = piece.second;
+
+//         const auto& cells = get_cells(idxs);
+
+//         const auto& p = nodes[idxs[0]];
+//         const auto& q = nodes[idxs[idxs.size()-1]];
+
+//         for(const auto& match : cells_match[i])
+//         {
+//             const auto& u = cells.first[match.first];
+//             const auto& v = cells.second[match.second];
+//             meshlines[i].push_back(compute_meshline(field,p,u,q,v));
+//         }
+//     }
+
+//     const auto& scaff_cells = scaff->cells;
+//     for(int i=0;i<nodes.size();i++)
+//     {
+//         if(g->is_dangling(i))
+//         {
+//             const auto& p = nodes[i];
+//             const Edge e = g->get_incident_edges(i)[0];
+//             const UnitVector v = (p-nodes[e.i!=i? e.i : e.j]).normalized();
+//             const auto& cell = scaff_cells.at({i,e});
+
+//             auto tip_meshlines = std::vector<Meshline>(cell.size());
+//             for(int j=0;j<cell.size();j++)
+//                 tip_meshlines[j] = compute_tip(p,cell[j],v);
+
+//             tips.push_back(tip_meshlines);
+//         }
+//     }
+// }
+
 void Mesher::compute()
 {
     compute_cells_match();
@@ -51,25 +102,45 @@ void Mesher::compute()
 
     meshlines = std::vector<std::vector<Meshline>>(pieces.size());
 
-    for(int i=0;i<pieces.size();i++)
-    {
-        const auto& piece = pieces[i];
+    const unsigned int n = std::thread::hardware_concurrency();
+    #ifdef DEBUG_MESHER_THREADS
+        std::cout << "Creating " << n << " meshline computing threads" << std::endl;
+    #endif
 
-        const auto& field = piece.first;
-        const auto& idxs = piece.second;
+    std::vector<std::thread> threads(n);
+    for(int k=0;k<n;k++)
+        threads.at(k) = std::thread([k,&n,&nodes,this](){
+            for(int i=k;i<pieces.size();i+=n)
+            {
+                const auto& piece = pieces[i];
 
-        const auto& cells = get_cells(idxs);
+                const auto& field = piece.first;
+                const auto& idxs = piece.second;
 
-        const auto& p = nodes[idxs[0]];
-        const auto& q = nodes[idxs[idxs.size()-1]];
+                const auto& cells = get_cells(idxs);
 
-        for(const auto& match : cells_match[i])
-        {
-            const auto& u = cells.first[match.first];
-            const auto& v = cells.second[match.second];
-            meshlines[i].push_back(compute_meshline(field,p,u,q,v));
-        }
-    }
+                const auto& p = nodes[idxs[0]];
+                const auto& q = nodes[idxs[idxs.size()-1]];
+
+                for(const auto& match : cells_match[i])
+                {
+                    const auto& u = cells.first[match.first];
+                    const auto& v = cells.second[match.second];
+                    meshlines[i].push_back(compute_meshline(field,p,u,q,v));
+                }
+            }
+        });
+
+    #ifdef DEBUG_MESHER_THREADS
+        std::cout << "Joining threads" << std::endl;
+    #endif
+
+    for(auto& thread :  threads)
+        thread.join();
+
+    #ifdef DEBUG_MESHER_THREADS
+        std::cout << "All threads joined" << std::endl;
+    #endif
 
     const auto& scaff_cells = scaff->cells;
     for(int i=0;i<nodes.size();i++)

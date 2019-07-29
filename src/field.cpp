@@ -114,7 +114,7 @@ double Field::eval(const Point& x) const
     gsl_integration_workspace * ws = gsl_integration_workspace_alloc(gsl_ws_size);
 
     //integrate
-    gsl_integration_qag (&F, 0.0e0, skel->l, max_err, max_err, gsl_ws_size, GSL_INTEG_GAUSS61, ws, &val, &err);
+    gsl_integration_qag(&F, 0.0e0, skel->l, max_err, max_err, gsl_ws_size, GSL_INTEG_GAUSS61, ws, &val, &err);
 
     gsl_integration_workspace_free(ws);
 
@@ -358,22 +358,6 @@ double ArcField::integrand_derivative_function(double t, const Point& x, int idx
     return d * d * val * da;
 }
 
-double MultiField::integrand_function(double t, const Point& x) const
-{
-    double res = 0.0;
-    for(const auto& field : fields)
-        res += field->integrand_function(t,x);
-    return res;
-}
-
-double MultiField::integrand_derivative_function(double t,const Point& x,int idx) const
-{
-    double res = 0.0;
-    for(const auto& field : fields)
-        res += field->integrand_derivative_function(t,x,idx);
-    return res;
-}
-
 double MultiField::max_radius(double lv) const
 {
     double max_b = std::max(fields[0]->b[0],fields[0]->b[1]);
@@ -390,3 +374,22 @@ double MultiField::max_radius(double lv) const
     // return std::max(max_bc,max_a);
     return max_bc;
 }
+
+double MultiField::eval(const Point& x) const
+{
+    double res = 0.0;
+    for(const auto& field : fields)
+        res += field->eval(x);
+    return res;
+}
+
+Vector MultiField::gradient_eval(const Point& x) const
+{
+    Vector res(0.0,0.0,0.0);
+    for(const auto& field : fields)
+        res += field->gradient_eval(x);
+    return res;
+}
+
+
+
