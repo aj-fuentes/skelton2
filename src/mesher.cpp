@@ -218,7 +218,7 @@ std::vector<Point> Mesher::compute_tip(const Point& p, const UnitVector& u, cons
     return points;
 }
 
-void Mesher::save_to_file(const std::string& fname) const
+void Mesher::save_to_file(const std::string& fname, bool save_normals) const
 {
 
     PointIndexer indexer;
@@ -317,33 +317,70 @@ void Mesher::save_to_file(const std::string& fname) const
         }
     }
 
+    const auto& points = indexer.get_points();
+    std::vector<Vector> normals(points.size());
+    std::transform(points.begin(),points.end(),normals.begin(),[this](const auto& p){
+        return -global_field->gradient_eval(p);
+    });
+
     //write everything to the file
     std::ofstream fout(fname);
     fout << std::fixed << std::setprecision(5);
     //first the points
-    for(const auto& p : indexer.get_points())
+    for(const auto& p : points)
     {
         fout << "v ";
         fout << p(0) << " ";
         fout << p(1) << " ";
         fout << p(2) << std::endl;
     }
-    //then the quads
-    for(const auto& q : quads) //if there are quads
+    if(save_normals)
     {
-        fout << "f ";
-        fout << std::get<0>(q) + 1 << " ";
-        fout << std::get<1>(q) + 1 << " ";
-        fout << std::get<2>(q) + 1 << " ";
-        fout << std::get<3>(q) + 1 << std::endl;
+        //write normals
+        for(const auto& n : normals)
+        {
+            fout << "vn ";
+            fout << n(0) << " ";
+            fout << n(1) << " ";
+            fout << n(2) << std::endl;
+        }
+        //then the quads
+        for(const auto& q : quads) //if there are quads
+        {
+            fout << "f ";
+            fout << std::get<0>(q) + 1 << "//" << std::get<0>(q) + 1 << " ";
+            fout << std::get<1>(q) + 1 << "//" << std::get<1>(q) + 1 << " ";
+            fout << std::get<2>(q) + 1 << "//" << std::get<2>(q) + 1 << " ";
+            fout << std::get<3>(q) + 1 << "//" << std::get<3>(q) + 1 << std::endl;
+        }
+        //then triangles
+        for(const auto& t : tris)
+        {
+            fout << "f ";
+            fout << std::get<0>(t) + 1 << "//" << std::get<0>(t) + 1 << " ";
+            fout << std::get<1>(t) + 1 << "//" << std::get<1>(t) + 1 << " ";
+            fout << std::get<2>(t) + 1 << "//" << std::get<2>(t) + 1 << std::endl;
+        }
     }
-    //then triangles
-    for(const auto& t : tris)
+    else
     {
-        fout << "f ";
-        fout << std::get<0>(t) + 1 << " ";
-        fout << std::get<1>(t) + 1 << " ";
-        fout << std::get<2>(t) + 1 << std::endl;
+        //write the quads
+        for(const auto& q : quads) //if there are quads
+        {
+            fout << "f ";
+            fout << std::get<0>(q) + 1 << " ";
+            fout << std::get<1>(q) + 1 << " ";
+            fout << std::get<2>(q) + 1 << " ";
+            fout << std::get<3>(q) + 1 << std::endl;
+        }
+        //then triangles
+        for(const auto& t : tris)
+        {
+            fout << "f ";
+            fout << std::get<0>(t) + 1 << " ";
+            fout << std::get<1>(t) + 1 << " ";
+            fout << std::get<2>(t) + 1 << std::endl;
+        }
     }
 
     fout.close();

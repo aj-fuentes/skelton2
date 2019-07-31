@@ -21,7 +21,7 @@ public:
     Meshline compute_meshline(const Field_ptr&, const Point&, const UnitVector&, const Point&, const UnitVector&);
     std::vector<Point> compute_tip(const Point&, const UnitVector&, const UnitVector&);
     void compute();
-    void save_to_file(const std::string&) const;
+    void save_to_file(const std::string&, bool=false) const;
 
 
     double max_quad_len;
