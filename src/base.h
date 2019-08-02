@@ -1,4 +1,6 @@
 /** @file base.h Base include for all includes in this project.
+ *
+ * @author     Alvaro Fuentes
  */
 
 #ifndef BASE_H
