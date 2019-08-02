@@ -234,5 +234,5 @@ TEST_CASE("6-ring mesh","[mesher]")
     scaff->compute();
     mesher->compute();
 
-    mesher->save_to_file("6-ring_mesh.obj");
+    mesher->save_to_file("6-ring_mesh.obj",true);
 }

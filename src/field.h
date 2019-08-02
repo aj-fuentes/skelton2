@@ -1,3 +1,8 @@
+/** @file field.h Anisotropic convolution fields
+ *
+ * @author     Alvaro Fuentes
+ */
+
 #ifndef FIELD_H
 #define FIELD_H
 
@@ -9,17 +14,60 @@ class SegmentField;
 class ArcField;
 class MultiField;
 
+/**
+ * Shared pointer to Field object
+ */
 typedef std::shared_ptr<Field> Field_ptr;
+
+/**
+ * Shared pointer to SegmentField object
+ */
 typedef std::shared_ptr<SegmentField> SegmentField_ptr;
+
+/**
+ * Shared pointer to ArcField object
+ */
 typedef std::shared_ptr<ArcField> ArcField_ptr;
+
+/**
+ * Shared pointer to MultiField object
+ */
 typedef std::shared_ptr<MultiField> MultiField_ptr;
 
-
+/**
+ * Parameter for Field constructor.
+ *
+ * Each parameter is a pair of values.
+ */
 typedef std::vector<double> FieldParams;
 
+/**
+ * @brief      This abstract class implements the basic functionality of an
+ *             anisotropic convolution field.
+ */
 class Field
 {
 public:
+    /**
+     * @brief      Base constructor for anisotropic convolution fields.
+     *
+     *             An anisotropic convolution field needs 8 parameters. At each
+     *             extremity of the supporting skeleton it needs 3 radii and and
+     *             angle that defines the rotation with respect to the frame of
+     *             the skeleton. In the parameters of the constructor (see
+     *             FieldParams) the first item is associated to the first
+     *             extremity of the skeleton, while the second item corresponds
+     *             to the last extremity.
+     *
+     *             The radius parameters are related to the ACTUAL radius of the surface by the following equations:
+     *             - actual_radius = radius_param/
+     *
+     * @param[in]  skel  The skeleton for the field
+     * @param[in]  a     Tangential radii information.
+     * @param[in]  b     Normal radii information.
+     * @param[in]  c     Binormal radii information.
+     * @param[in]  th    Rotation information.
+     */
     Field(const Skeleton_ptr& skel, const FieldParams& a, const FieldParams& b, const FieldParams& c, const FieldParams& th) :
         skel(skel), a(a), b(b), c(c), th(th), max_err(1.0e-8), gsl_ws_size(100)
     {}

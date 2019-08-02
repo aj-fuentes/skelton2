@@ -10,6 +10,10 @@
 #include "graph.h"
 
 class ConvexHull;
+
+/**
+ * Shared pointer to a ConvexHull object.
+ */
 typedef std::shared_ptr<ConvexHull> ConvexHull_ptr;
 
 /**
@@ -75,8 +79,6 @@ typedef std::vector<int> Face;
  *             points on the sphere at joints. It is capable of computing 3D and
  *             2D convex hulls, as well as degenerated cases like in
  *             articulations or dangling nodes.
- *
- * @todo       Fix this class: it is not a Graph, it uses a graph.
  */
 class ConvexHull {
 public:
