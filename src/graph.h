@@ -64,6 +64,11 @@ public:
 
     void check_graph();
 
+    void sort_incident_edges(int i, std::function<bool(const Edge&, const Edge&)> cmp)
+    {
+        std::sort(incident_edges[i].begin(),incident_edges[i].end(),cmp);
+    }
+
 protected:
     std::vector<Point> nodes;
     std::vector<Edge> edges;

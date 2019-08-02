@@ -30,30 +30,17 @@ ConvexHull::ConvexHull(std::vector<Point> points, bool compute_now) : planar(fal
         point_coords.push_back(q(1));
         point_coords.push_back(q(2));
     }
+    const auto& nodes = g.get_nodes();
     barycenter = std::accumulate(nodes.begin(),nodes.end(),Point(0,0,0))/nodes.size();
     if(compute_now)
         compute();
 }
 
-int ConvexHull::add_node(const Point& p)
-{
-    int idx = Graph::add_node(p);
-    if(idx==nodes.size()-1)
-        node_faces.emplace_back();
-    return idx;
-}
-
-bool ConvexHull::add_edge(int i, int j)
-{
-    bool added = Graph::add_edge(i,j);
-    if(added)
-        edge_faces[Edge(i,j)] = std::set<int>();
-    return added;
-}
-
 void ConvexHull::compute_planar() {
 
     planar = true;
+
+    const auto& nodes = g.get_nodes();
 
     if(nodes.size()<3)
     {
@@ -157,6 +144,7 @@ void ConvexHull::compute_planar() {
 
 void ConvexHull::compute()
 {
+    const auto& nodes = g.get_nodes();
     if(nodes.size()==0)
         throw std::logic_error("Error: zero points to compute convex hull");
 
@@ -201,7 +189,6 @@ void ConvexHull::compute()
 
             auto point_id = vertex.point().id();
             new_face.push_back(point_id);
-            node_faces[point_id].insert(new_face_id);
         }
 
         //setup the normal of this face
@@ -278,15 +265,17 @@ void ConvexHull::compute()
     }
 
     //check number of incident edges
-    for(int i=0;i<incident_edges.size();i++)
-        if(incident_edges[i].size()<3)
+    for(int i=0;i<nodes.size();i++)
+    {
+        if(g.get_incident_edges(i).size()<3)
         {
             std::stringstream ss;
             ss << "Point " << i << " has only ";
-            ss << incident_edges[i].size() << " incident edges";
+            ss << get_incident_edges(i).size() << " incident edges";
             ss << " in a non-planar convex hull (min 3)";
             throw std::logic_error(ss.str());
         }
+    }
 
     sort_incident_edges();
 }
@@ -298,37 +287,8 @@ void ConvexHull::sort_incident_edges() {
         std::cout << "Sorting incident edges " << std::endl;
     #endif
 
-    // for(int i=0;i<nodes.size();i++)
-    // {
-        // const auto& n = nodes[i];
-        // auto& edges = incident_edges[i];
-
-        // std::cout << "Incident edges number " << edges.size() << std::endl;
-        // if(edges.size()==0)
-        // {
-        //     std::cout << "Edges incident to node " << i << " are 0" <<std::endl;
-        //     std::cout << "Node i = " << n.transpose() <<std::endl;
-        // }
-        // const auto& e0 = edges[0];
-        // const int j = e0.i==i? e0.j : e0.i;
-        // const auto u = nodes[j];
-        // const auto v = n.cross(u).normalized();
-
-        // std::vector<std::pair<double,int>> angle_idxs;
-        // for(int k=0;k<edges.size();k++)
-        // {
-        //     const auto& e = edges[k];
-        //     const auto w = (nodes[e.i==i? e.j : e.i] - n).normalized();
-        //     angle_idxs.push_back(std::pair<double,int>{atan2(w.dot(v),w.dot(u)),k});
-        // }
-        // std::sort(angle_idxs.begin(),angle_idxs.end());
-
-        // std::vector<Edge> sorted_edges;
-        // std::vector<Edge> prev_edges(edges.begin(),edges.end());
-        // edges.clear();
-        // for(auto p : angle_idxs)
-        //     edges.push_back(prev_edges[p.second]);
-    // }
+    const auto& nodes = g.get_nodes();
+    const auto& edges = g.get_edges();
     for(int i=0;i<nodes.size();i++)
     {
         const auto& n = nodes[i]; //nodes were normalized
@@ -341,7 +301,7 @@ void ConvexHull::sort_incident_edges() {
             std::cout << "Node i = " << n.transpose() <<std::endl;
         #endif
 
-        std::sort(incident_edges[i].begin(),incident_edges[i].end(),[&,this](const Edge& e0, const Edge& e1){
+        g.sort_incident_edges(i,[&,this](const Edge& e0, const Edge& e1){
             const auto w0 = nodes[e0.i==i? e0.j : e0.i]-n; //edge vectors
             const auto w1 = nodes[e1.i==i? e1.j : e1.i]-n;
             return std::atan2(w0.dot(v),w0.dot(u))<std::atan2(w1.dot(v),w1.dot(u));
@@ -357,6 +317,7 @@ EdgeDual ConvexHull::edge_dual(const Edge& e) const
     const UnitVector u = normals[i];
     const UnitVector w = normals[j];
 
+    const auto& nodes = g.get_nodes();
     if(nodes.size()==1) //dangling
     {
         if(not (e.i==e.j and e.i==0))
