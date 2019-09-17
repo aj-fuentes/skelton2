@@ -499,7 +499,7 @@ void Scaffolder::compute()
     compute_cells_match();
 }
 
-void Scaffolder::save_to_file(const std::string& fname,bool triangulate,bool save_skeleton) const
+void Scaffolder::save_to_file(const std::string& fname,bool triangulate,bool save_skeleton, double R) const
 {
 
     PointIndexer indexer;
@@ -520,10 +520,10 @@ void Scaffolder::save_to_file(const std::string& fname,bool triangulate,bool sav
             auto& m1 = match[i];
             auto& m2 = match[(i+1)%match.size()];
 
-            const Point p0 = base1+cell1[m1.first];
-            const Point p1 = base2+cell2[m1.second];
-            const Point p2 = base2+cell2[m2.second];
-            const Point p3 = base1+cell1[m2.first];
+            const Point p0 = base1+R*cell1[m1.first];
+            const Point p1 = base2+R*cell2[m1.second];
+            const Point p2 = base2+R*cell2[m2.second];
+            const Point p3 = base1+R*cell1[m2.first];
 
             if(triangulate)
             {
@@ -573,9 +573,9 @@ void Scaffolder::save_to_file(const std::string& fname,bool triangulate,bool sav
             for(int i=0;i<cell1.size();i++)
             {
                 tris.push_back({
-                    indexer.index(base1+cell1[i]),
-                    indexer.index(base1+cell1[(i+1)%cell1.size()]),
-                    indexer.index(base1+(g->get_node(e.i)-g->get_node(e.j)).normalized())
+                    indexer.index(base1+R*cell1[i]),
+                    indexer.index(base1+R*cell1[(i+1)%cell1.size()]),
+                    indexer.index(base1+R*((g->get_node(e.i)-g->get_node(e.j)).normalized()))
                 });
             }
         }
@@ -584,9 +584,9 @@ void Scaffolder::save_to_file(const std::string& fname,bool triangulate,bool sav
             for(int i=0;i<cell2.size();i++)
             {
                 tris.push_back({
-                    indexer.index(base2+cell2[i]),
-                    indexer.index(base2+cell2[(i+1)%cell2.size()]),
-                    indexer.index(base2+(g->get_node(e.j)-g->get_node(e.i)).normalized())
+                    indexer.index(base2+R*cell2[i]),
+                    indexer.index(base2+R*cell2[(i+1)%cell2.size()]),
+                    indexer.index(base2+R*((g->get_node(e.j)-g->get_node(e.i)).normalized()))
                 });
             }
         }
