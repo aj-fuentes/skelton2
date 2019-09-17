@@ -41,6 +41,11 @@ bool Graph::add_edge(int i, int j)
 
 void Graph::read_from_file(const std::string& fname)
 {
+
+    std::vector<Point> points_read;
+    std::vector<Edge> edges_read;
+    PointIndexer indexer;
+
     std::ifstream fin(fname);
 
     if(not fin.good())
@@ -64,7 +69,7 @@ void Graph::read_from_file(const std::string& fname)
             {
                 double x,y,z;
                 lin >> x >> y >> z;
-                add_node(Point(x,y,z));
+                points_read.push_back(Point(x,y,z));
             } else if (type[0]=='l')
             {
                 int idx;
@@ -72,12 +77,19 @@ void Graph::read_from_file(const std::string& fname)
                 while(lin >> idx)
                     idxs.push_back(idx-1);
                 for(int i=0;i<idxs.size()-1;i++)
-                    add_edge(idxs[i],idxs[i+1]);
+                    edges_read.push_back(Edge(idxs[i],idxs[i+1]));
             }
         }
     }
 
     fin.close();
+
+    for(const auto& p : points_read)
+        indexer.index(p);
+    for(const auto& p : indexer.get_points())
+        add_node(p);
+    for(const auto& e : edges_read)
+        add_edge(indexer.index(points_read[e.i]),indexer.index(points_read[e.j]));
 
     check_graph();
 }
