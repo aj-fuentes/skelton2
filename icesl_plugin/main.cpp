@@ -4,7 +4,7 @@
 
 #include "scaffolder.h"
 
-// #define DEBUG_ICESL_PLUGIN
+#define DEBUG_ICESL_PLUGIN
 
 int main(int argc, char** argv)
 {
@@ -26,7 +26,7 @@ int main(int argc, char** argv)
     auto g = Graph_ptr(new Graph());
 
     #ifdef DEBUG_ICESL_PLUGIN
-    std::cout << "Readind skeleton graph from " << skeleton_file << std::endl;
+    std::cout << "Reading skeleton graph from " << skeleton_file << std::endl;
     #endif
 
     g->read_from_file(skeleton_file);
