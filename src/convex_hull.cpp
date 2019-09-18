@@ -59,6 +59,10 @@ void ConvexHull::compute_planar() {
                 }
             }
             n.normalize();
+            if(n.dot(nodes[0])>TOL or n.dot(nodes[1])>TOL)
+            {
+                throw std::logic_error("Articulation normal is not perpendicular to the incident nodes");
+            }
             faces.push_back({0,1});
             faces.push_back({0,1});
         }
@@ -330,10 +334,14 @@ EdgeDual ConvexHull::edge_dual(const Edge& e) const
         Vector v0 = nodes[0]+nodes[1];
         if(v0.norm()<TOL)
         {
-            v0 = Vector(1,0,0).cross(u);
+            v0 = nodes[0].cross(u);
             if(v0.norm()<TOL)
             {
-                v0 = Vector(0,1,0).cross(u);
+                v0 = nodes[1].cross(u);
+            }
+            if(v0.norm()<TOL)
+            {
+                throw std::logic_error("Cannot find articulation normal");
             }
         }
 
